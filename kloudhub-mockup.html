@@ -83,6 +83,11 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none;pad
 .btn-danger:hover{background:var(--err);opacity:.9}
 .btn-sm{height:26px;padding:0 9px;font-size:12.5px}
 .btn:disabled,.btn[aria-disabled="true"]{color:var(--text-3);background:var(--surface-2);border-color:var(--line);cursor:not-allowed}
+/* 기능 추가: 템플릿 선택 카드에 한 줄 설명 표시 */
+.tplpick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;height:auto;padding:7px 12px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--surface);text-align:left;max-width:172px;white-space:normal}
+.tplpick:hover{border-color:var(--sel);background:var(--sel-bg)}
+.tplpick b{font-size:13px;font-weight:600}
+.tplpick span{font-size:11px;color:var(--text-3);line-height:1.35}
 
 /* layout */
 .shell{display:flex;align-items:flex-start}
@@ -307,6 +312,8 @@ tbody tr.click:focus-visible{outline:2px solid var(--sel);outline-offset:-2px}
 input[type=checkbox]{width:15px;height:15px;accent-color:var(--sel);cursor:pointer;margin:0}
 tbody tr.sel{background:var(--sel-bg)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 15px;border-radius:var(--r);font-size:13.5px;z-index:90;opacity:0;pointer-events:none;transition:opacity .15s}
+.toast.act{pointer-events:auto;display:flex;align-items:center;gap:12px}
+.toast.act button{background:transparent;border:none;color:var(--bg);text-decoration:underline;font-size:13.5px;font-weight:600;cursor:pointer;padding:0;font-family:inherit}
 .toast.show{opacity:1}
 
 /* role gating */
@@ -529,42 +536,33 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
 <!-- ========== 개요 ========== -->
 <section data-view="overview" hidden>
   <div class="crumb">platform<span class="sp">/</span>개요</div>
-  <div class="head"><h1>개요</h1><div class="sub">kr-a · kr-b</div></div>
+  <div class="head"><h1>개요</h1><div class="sub">kr-a · kr-b</div><div class="grow"></div>
+    <button class="btn btn-sm rw" id="ovEditBtn" onclick="openDashEdit()"><svg class="ic ic-sm"><use href="#i-cog"/></svg>Dashboard 편집</button></div>
 
   <div id="ovEmpty" hidden>
-    <div class="empty">
-      <h3>아직 환경이 없습니다</h3>
-      <p>템플릿을 고르면 가상머신, 쿠버네티스, CI/CD 같은 환경을 몇 분 안에 만들 수 있습니다. 네트워크와 방화벽은 자동으로 설정됩니다.</p>
-      <button class="btn btn-pri rw" onclick="openWizard()"><svg class="ic ic-sm"><use href="#i-plus"/></svg>첫 환경 만들기</button>
-      <div class="picks">
-        <button class="btn rw" onclick="openWizard();pickTplByName('개발 VM')">개발 VM</button>
-        <button class="btn rw" onclick="openWizard();pickTplByName('쿠버네티스')">쿠버네티스</button>
-        <button class="btn rw" onclick="openWizard();pickTplByName('데이터베이스')">데이터베이스</button>
-        <button class="btn btn-quiet" onclick="go('templates')">템플릿 전체 보기</button>
-      </div>
-    </div>
+    <div id="ovOnboard"></div>
   </div>
 
-  <div id="ovFull">
-    <div class="sec stats" id="ovStats"></div>
+  <div id="ovFull" class="g2">
+    <div class="sec stats" id="ovStats" style="grid-column:1/-1"></div>
 
-    <div class="sec" id="ovActions">
+    <div class="sec" id="ovActions" style="grid-column:1/-1">
       <div class="card"><div class="card-body" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <div>
           <div style="font-weight:600;font-size:15px">무엇을 만들까요?</div>
           <div class="sub" style="margin-top:3px">템플릿을 고르면 인스턴스·네트워크·방화벽이 함께 준비됩니다.</div>
         </div>
         <div class="grow"></div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn rw" onclick="openWizard();pickTplByName('개발 VM')">개발 VM</button>
-          <button class="btn rw" onclick="openWizard();pickTplByName('쿠버네티스')">쿠버네티스</button>
-          <button class="btn rw" onclick="openWizard();pickTplByName('데이터베이스')">데이터베이스</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:stretch">
+          <button class="tplpick rw" onclick="openWizard();pickTplByName('개발 VM')"><b>개발 VM</b><span>혼자 코드 짜고 테스트할 개인 개발 환경</span></button>
+          <button class="tplpick rw" onclick="openWizard();pickTplByName('쿠버네티스')"><b>쿠버네티스</b><span>여러 서비스를 컨테이너로 운영·확장</span></button>
+          <button class="tplpick rw" onclick="openWizard();pickTplByName('데이터베이스')"><b>데이터베이스</b><span>앱에 바로 붙일 관리형 DB</span></button>
           <button class="btn btn-pri rw" onclick="openWizard()"><svg class="ic ic-sm"><use href="#i-plus"/></svg>전체 템플릿</button>
         </div>
       </div></div>
     </div>
 
-    <div class="sec" id="ovAlerts">
+    <div class="sec" id="ovAlerts" style="grid-column:1/-1">
       <div class="sec-head"><h2>확인이 필요한 항목</h2><div class="sub" id="ovAlertCount">2건</div></div>
       <div class="banner e" style="margin-bottom:8px" data-alert>
         <svg class="ic"><use href="#i-warn"/></svg>
@@ -587,18 +585,16 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
       </div>
     </div>
 
-    <div class="g2">
-      <div class="sec">
-        <div class="sec-head"><h2>환경</h2><div class="grow"></div>
-          <button class="btn btn-sm btn-quiet" onclick="go('environments')">전체 보기<svg class="ic ic-sm"><use href="#i-right"/></svg></button></div>
-        <div class="card"><div class="tw"><table><tbody id="ovEnvRows"></tbody></table></div></div>
-      </div>
-      <div class="sec">
-        <div class="sec-head"><h2>쿼터</h2><div class="grow"></div>
-          <button class="btn btn-sm btn-quiet" onclick="go('quota')">상세<svg class="ic ic-sm"><use href="#i-right"/></svg></button></div>
-        <div class="card"><div class="card-body" style="padding:4px 14px" id="qOverview"></div></div>
-        <p class="hint" id="ovQuotaHint"></p>
-      </div>
+    <div class="sec" id="ovWidgetEnvs">
+      <div class="sec-head"><h2>환경</h2><div class="grow"></div>
+        <button class="btn btn-sm btn-quiet" onclick="go('environments')">전체 보기<svg class="ic ic-sm"><use href="#i-right"/></svg></button></div>
+      <div class="card"><div class="tw"><table><tbody id="ovEnvRows"></tbody></table></div></div>
+    </div>
+    <div class="sec" id="ovWidgetQuota">
+      <div class="sec-head"><h2>쿼터</h2><div class="grow"></div>
+        <button class="btn btn-sm btn-quiet" onclick="go('quota')">상세<svg class="ic ic-sm"><use href="#i-right"/></svg></button></div>
+      <div class="card"><div class="card-body" style="padding:4px 14px" id="qOverview"></div></div>
+      <p class="hint" id="ovQuotaHint"></p>
     </div>
   </div>
 </section>
@@ -1002,11 +998,11 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
 <!-- ========== 팀 ========== -->
 <section data-view="team" hidden>
   <div class="crumb">platform<span class="sp">/</span>팀</div>
-  <div class="head"><h1>팀</h1><div class="sub">4명</div><div class="grow"></div>
-    <button class="btn btn-pri adminonly">멤버 초대</button></div>
+  <div class="head"><h1>팀</h1><div class="sub" id="teamCountSub">4명</div><div class="grow"></div>
+    <button class="btn btn-pri adminonly" onclick="openInvite()">멤버 초대</button></div>
   <div class="card"><div class="tw"><table>
     <thead><tr><th>이름</th><th>역할</th><th class="num">환경</th><th class="num">vCPU 점유</th><th>마지막 활동</th><th></th></tr></thead>
-    <tbody>
+    <tbody id="teamRows">
       <tr><td class="name">sh</td><td class="dim">관리자</td><td class="num">3</td><td class="num">18</td><td class="dim mono">방금</td><td class="act adminonly"><button class="btn btn-sm btn-quiet"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
       <tr><td class="name">jlee</td><td class="dim">멤버</td><td class="num">1</td><td class="num">2</td><td class="dim mono">2시간 전</td><td class="act adminonly"><button class="btn btn-sm btn-quiet"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
       <tr><td class="name">dkim</td><td class="dim">멤버</td><td class="num">2</td><td class="num">10</td><td class="dim mono">어제</td><td class="act adminonly"><button class="btn btn-sm btn-quiet"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
@@ -1523,7 +1519,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     </div>
 
     <div class="m-body" id="wz2" hidden>
-      <div class="frow"><div class="lbl">이름</div><input type="text" value="dev-sandbox-2"></div>
+      <div class="frow"><div class="lbl">이름</div><input type="text" value="dev-sandbox-2" oninput="renderWzPlan()"></div>
       <div class="frow"><div class="lbl">런타임</div>
         <div class="opts">
           <button class="opt" aria-pressed="true" onclick="tog(this)">Go 1.23</button>
@@ -1540,11 +1536,11 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
         <p class="hint w" id="wzQuotaHint">L은 남은 vCPU 쿼터를 초과합니다.
           <button class="btn btn-sm btn-quiet" onclick="closeWizard();go('quota')">쿼터 정리</button></p></div>
       <div class="frow"><div class="lbl">디스크 <span class="mono" id="dskv">50 GB</span></div>
-        <input type="range" min="20" max="200" step="10" value="50" oninput="document.getElementById('dskv').textContent=this.value+' GB'"></div>
+        <input type="range" min="20" max="200" step="10" value="50" oninput="document.getElementById('dskv').textContent=this.value+' GB';renderWzPlan()"></div>
       <div class="frow"><div class="lbl">접근</div>
-        <div class="opts">
-          <button class="opt" aria-pressed="true" onclick="tog(this)">SSH — 내 IP만</button>
-          <button class="opt" aria-pressed="false" onclick="tog(this)">HTTP/HTTPS 공개</button>
+        <div class="opts" id="wzAccessOpts">
+          <button class="opt" aria-pressed="true" onclick="tog(this);renderWzPlan()">SSH — 내 IP만</button>
+          <button class="opt" aria-pressed="false" onclick="tog(this);renderWzPlan()">HTTP/HTTPS 공개</button>
         </div></div>
       <div class="frow"><div class="lbl">수명</div>
         <div class="opts">
@@ -1573,16 +1569,16 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
               <span class="k">서버 타입</span><span class="v">std.m — Medium Instance</span>
             </div></div>
           <div class="frow"><div class="lbl">네트워크</div>
-            <div class="opts">
-              <button class="opt" aria-pressed="true" onclick="one(this)">전용 격리 네트워크<span class="o2">대역 자동 할당</span></button>
-              <button class="opt" aria-pressed="false" onclick="one(this)">기존에 합류<span class="o2">platform-shared</span></button>
+            <div class="opts" id="wzNetOpts">
+              <button class="opt" aria-pressed="true" onclick="one(this);renderWzPlan()">전용 격리 네트워크<span class="o2">대역 자동 할당</span></button>
+              <button class="opt" aria-pressed="false" onclick="one(this);renderWzPlan()">기존에 합류<span class="o2">platform-shared</span></button>
             </div>
             <p class="hint">환경마다 대역이 분리되고 기본은 전면 차단입니다. 다른 환경에서 접근하려면 생성 후 환경 연결을 추가하세요.</p></div>
           <div class="frow"><div class="lbl">초기 스크립트</div>
-            <div class="opts">
-              <button class="opt" aria-pressed="true" onclick="one(this);scr(0)">사용 안 함</button>
-              <button class="opt" aria-pressed="false" onclick="one(this);scr(0)">go-dev-bootstrap<span class="o2">등록된 스크립트</span></button>
-              <button class="opt" aria-pressed="false" onclick="one(this);scr(1)">직접 입력<span class="o2">cloud-init</span></button>
+            <div class="opts" id="wzScriptOpts">
+              <button class="opt" aria-pressed="true" onclick="one(this);scr(0);renderWzPlan()">사용 안 함</button>
+              <button class="opt" aria-pressed="false" onclick="one(this);scr(0);renderWzPlan()">go-dev-bootstrap<span class="o2">등록된 스크립트</span></button>
+              <button class="opt" aria-pressed="false" onclick="one(this);scr(1);renderWzPlan()">직접 입력<span class="o2">cloud-init</span></button>
             </div>
             <div id="scrBox" hidden style="margin-top:9px">
               <textarea spellcheck="false" aria-label="초기 스크립트">#cloud-config
@@ -1592,9 +1588,9 @@ runcmd:
             </div>
             <p class="hint">템플릿 프로비저닝이 끝난 뒤 실행됩니다.</p></div>
           <div class="frow"><div class="lbl">키페어</div>
-            <div class="opts">
-              <button class="opt" aria-pressed="true" onclick="one(this)">sh@laptop<span class="o2">ssh-ed25519</span></button>
-              <button class="opt" aria-pressed="false" onclick="one(this)">새 키 발급<span class="o2">.pem 내려받기</span></button>
+            <div class="opts" id="wzKeyOpts">
+              <button class="opt" aria-pressed="true" onclick="one(this);renderWzPlan()">sh@laptop<span class="o2">ssh-ed25519</span></button>
+              <button class="opt" aria-pressed="false" onclick="one(this);renderWzPlan()">새 키 발급<span class="o2">.pem 내려받기</span></button>
             </div></div>
           <div class="frow" style="margin-bottom:0"><div class="lbl">삭제 보호</div>
             <div class="opts">
@@ -1604,6 +1600,8 @@ runcmd:
             <p class="hint">보호된 환경은 만료되지 않지만 쿼터는 계속 점유합니다.</p></div>
         </div>
       </div>
+
+      <div id="wzPlan" class="card" style="margin-top:16px;overflow:hidden"></div>
     </div>
 
     <div class="m-foot">
@@ -1611,6 +1609,46 @@ runcmd:
       <div class="grow"></div>
       <button class="btn" id="wzBack" hidden onclick="wzStep(1)">뒤로</button>
       <button class="btn btn-pri" id="wzNext" onclick="wzNext()">다음</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 팀원 초대 ========== -->
+<div class="scrim" id="inviteScrim" onclick="if(event.target===this)closeInvite()">
+  <div class="modal" style="max-width:460px" role="dialog" aria-modal="true" aria-label="팀원 초대">
+    <div class="m-head"><h2>팀원 초대</h2><div class="grow"></div>
+      <button class="btn btn-sm btn-quiet" onclick="closeInvite()">닫기</button></div>
+    <div class="m-body">
+      <div class="frow"><div class="lbl">이메일</div><input type="text" id="inviteEmail" placeholder="teammate@company.com"></div>
+      <div class="frow" style="margin-bottom:0"><div class="lbl">역할</div>
+        <div class="opts" id="inviteRoleOpts">
+          <button class="opt" aria-pressed="false" onclick="one(this)">관리자</button>
+          <button class="opt" aria-pressed="true" onclick="one(this)">멤버</button>
+          <button class="opt" aria-pressed="false" onclick="one(this)">읽기 전용</button>
+        </div></div>
+    </div>
+    <div class="m-foot">
+      <div class="grow"></div>
+      <button class="btn" onclick="closeInvite()">취소</button>
+      <button class="btn btn-pri" onclick="sendInvite()">초대 보내기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Dashboard 편집 ========== -->
+<div class="scrim" id="dashEditScrim" onclick="if(event.target===this)closeDashEdit()">
+  <div class="modal" style="max-width:440px" role="dialog" aria-modal="true" aria-label="Dashboard 편집">
+    <div class="m-head"><h2>Dashboard 편집</h2><div class="grow"></div>
+      <button class="btn btn-sm btn-quiet" onclick="closeDashEdit()">닫기</button></div>
+    <div class="m-body">
+      <p class="hint" style="margin:0 0 12px">보여줄 위젯을 고르고 순서를 정하세요. 체크를 끄면 개요 화면에서 숨겨집니다.</p>
+      <div id="dashEditRows"></div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-quiet" onclick="resetDashEdit()">기본값으로</button>
+      <div class="grow"></div>
+      <button class="btn" onclick="closeDashEdit()">취소</button>
+      <button class="btn btn-pri" onclick="saveDashEdit()">저장</button>
     </div>
   </div>
 </div>
@@ -2045,6 +2083,7 @@ function createEnv(opts){
     log:'[09-19 09:30:00] provisioning started'
   };
   ENVS.unshift(e); refreshAll();
+  if(!OB.env){ OB.env = true; renderOnboard(); }
   const steps = [
     [1,'쿼터 예약',10],[2,'네트워크 준비',28],[3,'인스턴스 생성',52],
     [4,'패키지 설치',74],[5,'초기 스크립트 실행',90],[6,'헬스 체크',98]
@@ -2127,13 +2166,37 @@ function instToggleAll(cb){ instances().forEach(i => cb.checked ? instSel.add(i.
 function volToggleAll(cb){ volumes().forEach(v => cb.checked ? volSel.add(v.n) : volSel.delete(v.n)); renderVolumes(); }
 function bulkInst(op){
   const n = instSel.size; if(!n) return;
-  const msg = {stop:'정지합니다', start:'시작합니다', delete:'삭제합니다'}[op];
-  toast(`인스턴스 ${n}대를 ${msg}`); instSel.clear(); renderInstances();
+  if(op === 'stop' || op === 'delete'){
+    BULK_INST = {op, names:[...instSel]};
+    dlg(op === 'delete' ? 'bulkDeleteInst' : 'bulkStopInst', {names:[...instSel]});
+    return;
+  }
+  toast(`인스턴스 ${n}대를 시작합니다`); instSel.clear(); renderInstances();
+}
+let BULK_INST = null;
+function doBulkInst(){
+  if(!BULK_INST) return;
+  const {op, names} = BULK_INST;
+  const msg = {stop:'정지합니다', delete:'삭제합니다'}[op];
+  toast(`인스턴스 ${names.length}대를 ${msg}`);
+  instSel.clear(); renderInstances();
 }
 function bulkVol(op){
   const n = volSel.size; if(!n) return;
-  const msg = {snapshot:'스냅샷을 만듭니다', detach:'분리합니다', delete:'삭제합니다'}[op];
-  toast(`볼륨 ${n}개를 ${msg}`); volSel.clear(); renderVolumes();
+  if(op === 'detach' || op === 'delete'){
+    BULK_VOL = {op, names:[...volSel]};
+    dlg(op === 'delete' ? 'bulkDeleteVol' : 'bulkDetachVol', {names:[...volSel]});
+    return;
+  }
+  toast(`볼륨 ${n}개의 스냅샷을 만듭니다`); volSel.clear(); renderVolumes();
+}
+let BULK_VOL = null;
+function doBulkVol(){
+  if(!BULK_VOL) return;
+  const {op, names} = BULK_VOL;
+  const msg = {detach:'분리합니다', delete:'삭제합니다'}[op];
+  toast(`볼륨 ${names.length}개를 ${msg}`);
+  volSel.clear(); renderVolumes();
 }
 function renderInstances(){
   const all = instances();
@@ -2418,11 +2481,20 @@ function bulk(op){
     return;
   }
   if(op === 'stop'){
-    ids.forEach(id => { const e = ENVS.find(x => x.id===id); if(e && e.state==='running') transition(id,'stopping',1800); });
-    toast(`${ids.length}개 환경을 정지합니다`);
+    const running = ids.filter(id => { const e = ENVS.find(x => x.id===id); return e && e.state==='running'; });
+    if(!running.length){ toast('정지할 수 있는 실행 중인 환경이 없습니다'); return; }
+    BULK_STOP_IDS = running;
+    dlg('bulkStopEnv', {ids: running});
+    return;
   }
   if(op === 'extend'){ toast(`${ids.length}개 환경을 30일 연장했습니다`); }
   envSel.clear(); renderEnvList();
+}
+let BULK_STOP_IDS = [];
+function doBulkStopEnv(ids){
+  ids.forEach(id => transition(id, 'stopping', 1800));
+  envSel.clear(); renderEnvList();
+  toast(`${ids.length}개 환경을 정지합니다`);
 }
 function rowActions(e){
   const dots = `<button class="btn btn-sm btn-quiet" onclick="menuAt(event,'${e.id}')"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button>`;
@@ -2859,7 +2931,184 @@ function toggleEmpty(){
   closeMenus(); emptyMode = !emptyMode;
   $('#ovEmpty').hidden = !emptyMode; $('#ovFull').hidden = emptyMode;
   $('#envEmpty').hidden = !emptyMode; $('#envFull').hidden = emptyMode;
+  $('#ovEditBtn').hidden = emptyMode;
   toast(emptyMode ? '빈 상태를 표시합니다' : '기본 데이터로 돌아왔습니다');
+}
+
+/* ---------- 시작 가이드(온보딩 체크리스트) ---------- */
+// 기능 추가: 온보딩 체크리스트 (첫 접속 시 "지금 할 일" 하나만 강조)
+const OB = {env:false, invite:false};
+const OB_STEPS = [
+  {key:'env', title:'첫 환경 만들기', desc:'템플릿을 고르면 인스턴스·네트워크·방화벽이 함께 준비됩니다. 3분이면 충분해요.', btn:'환경 만들기 시작', onclick:'openWizard()', extra:true},
+  {key:'invite', title:'팀원 초대', desc:'함께 작업할 동료를 초대해 환경을 공유하세요.', btn:'팀원 초대하기', onclick:'openInvite()'}
+];
+function obRow(n, s, state){
+  if(state==='done'){
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid var(--line)">
+      <div style="width:19px;height:19px;border-radius:50%;background:var(--ok);display:flex;align-items:center;justify-content:center;flex:none">
+        <svg class="ic ic-sm" style="color:#fff;width:12px;height:12px"><use href="#i-check"/></svg>
+      </div>
+      <div style="font-size:12.5px;color:var(--text-2)">${s.title} 완료</div>
+      <div class="grow"></div>
+      <span class="chip" style="color:var(--ok);border-color:var(--ok)">완료</span>
+    </div>`;
+  }
+  if(state==='current'){
+    const extra = s.extra ? `
+      <div style="margin-top:14px">
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:6px">또는 템플릿으로 바로 시작</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="tplpick rw" onclick="openWizard();pickTplByName('개발 VM')"><b>개발 VM</b><span>혼자 코드 짜고 테스트할 개인 개발 환경</span></button>
+          <button class="tplpick rw" onclick="openWizard();pickTplByName('쿠버네티스')"><b>쿠버네티스</b><span>여러 서비스를 컨테이너로 운영·확장</span></button>
+          <button class="tplpick rw" onclick="openWizard();pickTplByName('데이터베이스')"><b>데이터베이스</b><span>앱에 바로 붙일 관리형 DB</span></button>
+        </div>
+      </div>` : '';
+    return `<div style="padding:24px 18px;background:var(--sel-bg)${n<OB_STEPS.length?';border-bottom:1px solid var(--line)':''}">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px">
+        <span style="width:19px;height:19px;border-radius:50%;background:var(--sel);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:none">${n}</span>
+        <span style="font-size:11px;font-weight:700;color:var(--sel);letter-spacing:.03em">지금 할 일</span>
+      </div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:6px;letter-spacing:-.01em">${s.title}</div>
+      <p style="font-size:13.5px;color:var(--text-2);margin:0 0 16px;max-width:520px">${s.desc}</p>
+      <button class="btn btn-pri rw" id="obCurrentBtn" style="height:38px;padding:0 18px;font-size:14px;font-weight:600" onclick="${s.onclick}"><svg class="ic ic-sm"><use href="#i-plus"/></svg>${s.btn}</button>
+      ${extra}
+    </div>`;
+  }
+  return `<div style="display:flex;align-items:center;gap:10px;padding:9px 18px;opacity:.5">
+    <div style="width:19px;height:19px;border-radius:50%;border:1.5px solid var(--line-strong);display:flex;align-items:center;justify-content:center;flex:none;font-size:10px;font-weight:700;color:var(--text-3)">${n}</div>
+    <div style="font-size:12.5px">${s.title}</div>
+    <div class="grow"></div>
+    <span style="font-size:11.5px;color:var(--text-3)">${n-1}단계 완료 후 진행</span>
+  </div>`;
+}
+function renderOnboard(){
+  const box = document.getElementById('ovOnboard');
+  if(!box) return;
+  const doneCount = OB_STEPS.filter(s => OB[s.key]).length;
+  if(doneCount === OB_STEPS.length){
+    box.innerHTML = `<div class="card"><div class="card-body" style="display:flex;align-items:center;gap:10px;padding:14px 18px">
+      <svg class="ic" style="color:var(--ok)"><use href="#i-check"/></svg>
+      <div style="font-size:13.5px;font-weight:600">시작 가이드를 모두 완료했습니다</div>
+    </div></div>`;
+    return;
+  }
+  const bars = OB_STEPS.map((s,i) => {
+    const c = OB[s.key] ? 'var(--ok)' : (i===doneCount ? 'var(--sel)' : 'var(--surface-3)');
+    return `<span style="width:22px;height:4px;border-radius:2px;background:${c}"></span>`;
+  }).join('');
+  const rows = OB_STEPS.map((s,i) => obRow(i+1, s, OB[s.key] ? 'done' : (i===doneCount ? 'current' : 'locked'))).join('');
+  box.innerHTML = `<div class="card" style="overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--line)">
+      <div style="font-weight:600;font-size:14.5px">시작 가이드</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;gap:4px">${bars}</div>
+        <span class="sub mono" style="font-size:12px">${doneCount} / ${OB_STEPS.length}</span>
+      </div>
+    </div>
+    ${rows}
+  </div>`;
+}
+function openInvite(){ closeMenus(); $('#inviteScrim').classList.add('open'); trapOpen($('#inviteScrim')); }
+function closeInvite(){ $('#inviteScrim').classList.remove('open'); trapClose(); }
+function sendInvite(){
+  const email = document.getElementById('inviteEmail').value.trim();
+  if(!email){ toast('이메일을 입력하세요'); return; }
+  const roleBtn = document.querySelector('#inviteRoleOpts .opt[aria-pressed="true"]');
+  const role = roleBtn ? roleBtn.textContent.trim() : '멤버';
+  closeInvite();
+  OB.invite = true;
+  pendingInvites.push({email, role, sentAt: Date.now()});
+  renderTeamPending();
+  toast(email + ' 님에게 초대를 보냈습니다');
+  renderOnboard();
+  document.getElementById('inviteEmail').value = '';
+}
+// 기능 추가: 팀 페이지에 "대기 중" 초대 상태 표시 (재전송/취소 포함)
+let pendingInvites = [];
+function renderTeamPending(){
+  const tbody = document.getElementById('teamRows');
+  if(!tbody) return;
+  tbody.querySelectorAll('tr[data-pending]').forEach(r => r.remove());
+  pendingInvites.forEach((inv, i) => {
+    const tr = document.createElement('tr');
+    tr.dataset.pending = '1';
+    tr.style.opacity = '.6';
+    tr.innerHTML = `<td class="name">${esc(inv.email)}</td><td class="dim">${esc(inv.role)}</td><td class="num faint">—</td><td class="num faint">—</td>
+      <td class="dim mono">초대됨 · 대기 중</td>
+      <td class="act adminonly" style="display:flex;gap:4px">
+        <button class="btn btn-sm btn-quiet" onclick="resendInvite(${i})">재전송</button>
+        <button class="btn btn-sm btn-quiet" onclick="cancelInvite(${i})">취소</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  const sub = document.getElementById('teamCountSub');
+  const memberCount = tbody.querySelectorAll('tr:not([data-pending])').length;
+  if(sub) sub.textContent = pendingInvites.length ? `${memberCount}명 · 대기 중 ${pendingInvites.length}` : `${memberCount}명`;
+}
+function resendInvite(i){
+  const inv = pendingInvites[i]; if(!inv) return;
+  toast(inv.email + ' 님에게 초대를 다시 보냈습니다');
+}
+function cancelInvite(i){
+  const inv = pendingInvites[i]; if(!inv) return;
+  pendingInvites.splice(i, 1);
+  renderTeamPending();
+  toast('초대를 취소했습니다');
+}
+
+/* ---------- 개요 Dashboard 편집 ---------- */
+// 기능 추가: Dashboard 위젯 표시/순서 커스터마이즈
+const DASH_DEFAULT = [
+  {id:'stats',  label:'통계 요약',            el:'#ovStats',       visible:true},
+  {id:'actions',label:'빠른 생성',            el:'#ovActions',     visible:true},
+  {id:'alerts', label:'확인이 필요한 항목',    el:'#ovAlerts',      visible:true},
+  {id:'envs',   label:'환경 목록',            el:'#ovWidgetEnvs',  visible:true},
+  {id:'quota',  label:'쿼터',                el:'#ovWidgetQuota', visible:true}
+];
+let dashWidgets = DASH_DEFAULT.map(w => ({...w}));
+let dashEditTmp = [];
+function applyDashboard(){
+  const parent = document.getElementById('ovFull');
+  dashWidgets.forEach(w => {
+    const el = document.querySelector(w.el);
+    if(!el) return;
+    el.hidden = !w.visible;
+    parent.appendChild(el);
+  });
+}
+function openDashEdit(){
+  closeMenus();
+  dashEditTmp = dashWidgets.map(w => ({...w}));
+  renderDashEditRows();
+  $('#dashEditScrim').classList.add('open'); trapOpen($('#dashEditScrim'));
+}
+function closeDashEdit(){ $('#dashEditScrim').classList.remove('open'); trapClose(); }
+function renderDashEditRows(){
+  const box = document.getElementById('dashEditRows');
+  box.innerHTML = dashEditTmp.map((w,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)">
+      <input type="checkbox" ${w.visible?'checked':''} onchange="toggleDashEditVis('${w.id}')" aria-label="${w.label} 표시 여부">
+      <span style="flex:1;font-size:13.5px;${w.visible?'':'color:var(--text-3)'}">${w.label}</span>
+      <button class="btn btn-sm btn-quiet" ${i===0?'disabled':''} onclick="moveDashEdit('${w.id}',-1)" aria-label="${w.label} 위로 이동">↑</button>
+      <button class="btn btn-sm btn-quiet" ${i===dashEditTmp.length-1?'disabled':''} onclick="moveDashEdit('${w.id}',1)" aria-label="${w.label} 아래로 이동">↓</button>
+    </div>`).join('');
+}
+function toggleDashEditVis(id){
+  const w = dashEditTmp.find(x => x.id===id); w.visible = !w.visible; renderDashEditRows();
+}
+function moveDashEdit(id, dir){
+  const i = dashEditTmp.findIndex(x => x.id===id);
+  const j = i + dir;
+  if(j < 0 || j >= dashEditTmp.length) return;
+  [dashEditTmp[i], dashEditTmp[j]] = [dashEditTmp[j], dashEditTmp[i]];
+  renderDashEditRows();
+}
+function resetDashEdit(){ dashEditTmp = DASH_DEFAULT.map(w => ({...w})); renderDashEditRows(); }
+function saveDashEdit(){
+  dashWidgets = dashEditTmp;
+  applyDashboard();
+  closeDashEdit();
+  toast('Dashboard 구성을 저장했습니다');
 }
 
 /* ---------- role demo ---------- */
@@ -2935,7 +3184,7 @@ function wzStep(s){
       let base = t.c, i = 1;
       while(ENVS.some(e => e.id === base + '-' + i)) i++;
       inp.value = base + '-' + i;
-      inp.oninput = () => { inp.dataset.touched = '1'; };
+      inp.oninput = () => { inp.dataset.touched = '1'; renderWzPlan(); };
     }
   }
   $('#wzStepLbl').textContent = s + ' / 2';
@@ -2995,12 +3244,22 @@ function applyTableFilter(el){
 }
 function dismissAlert(btn){
   const b = btn.closest('[data-alert]'); if(!b) return;
+  const parent = b.parentElement, next = b.nextElementSibling;
   b.remove();
   const left = document.querySelectorAll('#ovAlerts [data-alert]').length;
   document.getElementById('ovAlertCount').textContent = left ? left + '건' : '없음';
-  if(!left) document.getElementById('ovAlerts').querySelector('.sec-head').insertAdjacentHTML('afterend',
-    `<div class="card"><div class="card-body" style="color:var(--text-2)">확인이 필요한 항목이 없습니다.</div></div>`);
-  toast('알림을 닫았습니다');
+  let emptyNote = null;
+  if(!left){
+    document.getElementById('ovAlerts').querySelector('.sec-head').insertAdjacentHTML('afterend',
+      `<div class="card" data-alert-empty><div class="card-body" style="color:var(--text-2)">확인이 필요한 항목이 없습니다.</div></div>`);
+    emptyNote = document.querySelector('#ovAlerts [data-alert-empty]');
+  }
+  toastAction('알림을 닫았습니다', '실행 취소', () => {
+    if(emptyNote) emptyNote.remove();
+    if(next && next.parentElement === parent) parent.insertBefore(b, next); else parent.appendChild(b);
+    const now = document.querySelectorAll('#ovAlerts [data-alert]').length;
+    document.getElementById('ovAlertCount').textContent = now + '건';
+  });
 }
 function resetFilter(b){
   const sec = b.closest('[data-view]');
@@ -3028,6 +3287,43 @@ function delta(){
   if(L) L.disabled = u.cpu + 8 > QMAX.cpu;
   const h = document.getElementById('wzQuotaHint');
   if(h) h.firstChild.textContent = `L은 남은 vCPU 쿼터(${QMAX.cpu-u.cpu})를 초과합니다. `;
+  renderWzPlan();
+}
+// 기능 추가: Terraform plan 스타일 — 생성 전 리소스 미리보기
+function renderWzPlan(){
+  const box = document.getElementById('wzPlan');
+  if(!box) return;
+  if(step !== 2){ box.innerHTML = ''; return; }
+  const nameEl = document.querySelector('#wz2 input[type=text]');
+  const name = (nameEl && nameEl.value.trim()) || 'new-env';
+  const sz = document.querySelector('#wz2 .opt[data-cpu][aria-pressed="true"]');
+  const cpu = sz ? sz.dataset.cpu : '4', mem = sz ? sz.dataset.mem : '8';
+  const disk = (document.getElementById('dskv') || {}).textContent || '50 GB';
+  const accessBtns = [...document.querySelectorAll('#wzAccessOpts .opt[aria-pressed="true"]')];
+  const netEl = document.querySelector('#wzNetOpts .opt[aria-pressed="true"]');
+  const netText = netEl ? netEl.childNodes[0].textContent.trim() : '전용 격리 네트워크';
+  const scriptEl = document.querySelector('#wzScriptOpts .opt[aria-pressed="true"]');
+  const scriptText = scriptEl ? scriptEl.childNodes[0].textContent.trim() : '사용 안 함';
+  const keyEl = document.querySelector('#wzKeyOpts .opt[aria-pressed="true"]');
+  const keyText = keyEl ? keyEl.childNodes[0].textContent.trim() : '';
+
+  const lines = [
+    {t:'인스턴스 1개', d:`${esc(name)} · ${cpu} vCPU · ${mem}GB`},
+    {t:'볼륨 1개', d:disk},
+    {t:'네트워크 1개', d:esc(netText)}
+  ];
+  if(accessBtns.length) lines.push({t:`ACG 규칙 ${accessBtns.length}개`, d:esc(accessBtns.map(b => b.textContent.trim()).join(', '))});
+  if(scriptText !== '사용 안 함') lines.push({t:'초기화 스크립트 실행', d:esc(scriptText)});
+  if(keyText === '새 키 발급') lines.push({t:'새 키페어 발급', d:'.pem 다운로드'});
+
+  box.innerHTML = `<div class="card-body" style="padding:12px 14px">
+    <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:8px">생성될 항목 · ${lines.length}개</div>
+    ${lines.map(l => `<div style="display:flex;gap:9px;align-items:baseline;font-size:12.5px;padding:3px 0">
+      <span class="mono" style="color:var(--ok);font-weight:700;flex:none">+</span>
+      <span class="mono" style="min-width:130px;flex:none">${l.t}</span>
+      <span class="dim">${l.d}</span>
+    </div>`).join('')}
+  </div>`;
 }
 
 /* ---------- modals ---------- */
@@ -3134,12 +3430,21 @@ const PAGES = [
   ['프로젝트','admin-projects'],['서버 타입','admin-types'],
   ['기능 매핑','admin-caps'],['네트워크 (관리자)','admin-network'],['이미지 (관리자)','admin-images'],['쿼터 정책','admin-quota'],['클라우드 백엔드','admin-cloud'],['감사 로그','admin-audit']
 ];
+// 기능 추가: 커맨드 팔레트(⌘K)에 이동뿐 아니라 실행 가능한 동작 추가
+const ACTIONS = [
+  {t:'새 환경 만들기', i:'i-plus', a:() => openWizard()},
+  {t:'팀원 초대하기', i:'i-users', a:() => { go('team'); openInvite(); }},
+  {t:'Dashboard 편집', i:'i-cog', a:() => { go('overview'); openDashEdit(); }},
+  {t:'쿼터 회수 대상 보기', i:'i-gauge', a:() => go('quota')}
+];
 let palIdx = 0, palItems = [];
 function openPal(){ closeMenus(); $('#palScrim').classList.add('open'); $('#palIn').value=''; palFilter(); $('#palIn').focus(); }
 function closePal(){ $('#palScrim').classList.remove('open'); }
 function palFilter(){
   const q = $('#palIn').value.trim().toLowerCase();
   palItems = [];
+  ACTIONS.forEach(a => { if(!q || a.t.toLowerCase().includes(q))
+    palItems.push({t:a.t, k:'동작', i:a.i, a:a.a}); });
   ENVS.forEach(e => { if(!q || e.id.toLowerCase().includes(q) || e.tpl.toLowerCase().includes(q))
     palItems.push({t:e.id, k:'환경 · '+STATES[e.state].l, i:'i-server', a:()=>openEnv(e.id)}); });
   TPL.forEach(t => { if(!q || t.n.toLowerCase().includes(q) || t.c.includes(q))
@@ -3166,8 +3471,17 @@ let tt;
 function toast(m){
   if(!m) return;
   announce(m);
-  const t = $('#toast'); t.textContent = m; t.classList.add('show');
+  const t = $('#toast'); t.classList.remove('act'); t.textContent = m; t.classList.add('show');
   clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2000);
+}
+// 기능 추가: 가벼운 작업은 모달 대신 "실행 취소" 토스트로 처리
+function toastAction(m, label, fn, ms){
+  announce(m);
+  const t = $('#toast');
+  t.innerHTML = `<span>${esc(m)}</span><button type="button">${esc(label)}</button>`;
+  t.classList.add('show','act');
+  t.querySelector('button').onclick = () => { t.classList.remove('show','act'); clearTimeout(tt); fn(); };
+  clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show','act'), ms || 5000);
 }
 function copy(e, txt){
   e.stopPropagation();
@@ -3905,7 +4219,47 @@ spec:
 
   logout: () => ({t:'로그아웃', w:420,
     b:`<p style="margin:0">로그아웃하면 이 브라우저의 세션이 종료됩니다. 실행 중인 환경과 작업은 계속 진행됩니다.</p>`,
-    f:fFoot('로그아웃','로그아웃했습니다',{then:"showLogin();"})})
+    f:fFoot('로그아웃','로그아웃했습니다',{then:"showLogin();"})}),
+
+  /* 기능 추가: 환경/인스턴스/볼륨 대량 정지·삭제·분리에 확인 다이얼로그 추가 */
+  bulkStopEnv: c => ({t:`환경 ${c.ids.length}개 정지`, w:520,
+    b:`${fBan('정지해도 <b>디스크는 반납되지 않습니다.</b> 실행 중인 세션이 있다면 끊깁니다.')}
+      ${fFld('대상', fTbl(['환경','사양'], c.ids.map(id => {
+        const e = ENVS.find(x => x.id === id) || {};
+        return [`<span class="mono">${esc(id)}</span>`, `<span class="dim mono">${e.cpu} vCPU · ${e.mem}GB</span>`];
+      })))}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-warn" onclick="dlgClose();doBulkStopEnv(BULK_STOP_IDS)">정지</button>`}),
+
+  bulkStopInst: c => ({t:`인스턴스 ${c.names.length}대 정지`, w:520,
+    b:`${fBan('정지해도 <b>디스크는 반납되지 않습니다.</b> 접속 중인 세션이 있다면 끊깁니다.')}
+      ${fFld('대상', fTbl(['인스턴스'], c.names.map(n => [`<span class="mono">${esc(n)}</span>`])))}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-warn" onclick="dlgClose();doBulkInst()">정지</button>`}),
+
+  bulkDeleteInst: c => ({t:`인스턴스 ${c.names.length}대 삭제`, w:520,
+    b:`${fBan('되돌릴 수 없습니다. 삭제된 인스턴스는 복구할 수 없습니다.')}
+      ${fFld('대상', fTbl(['인스턴스'], c.names.map(n => [`<span class="mono">${esc(n)}</span>`])))}
+      ${fFld('확인', `<input type="text" placeholder="삭제" autocomplete="off"
+        oninput="document.getElementById('instBulkOk').disabled = this.value.trim() !== '삭제'">`,
+        '진행하려면 <b>삭제</b>를 입력하세요.')}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-danger" id="instBulkOk" disabled onclick="dlgClose();doBulkInst()">삭제</button>`}),
+
+  bulkDetachVol: c => ({t:`볼륨 ${c.names.length}개 분리`, w:520,
+    b:`${fBan('분리된 볼륨은 연결된 인스턴스에서 더 이상 보이지 않습니다. 재연결 전까지 데이터에 접근할 수 없습니다.')}
+      ${fFld('대상', fTbl(['볼륨'], c.names.map(n => [`<span class="mono">${esc(n)}</span>`])))}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-warn" onclick="dlgClose();doBulkVol()">분리</button>`}),
+
+  bulkDeleteVol: c => ({t:`볼륨 ${c.names.length}개 삭제`, w:520,
+    b:`${fBan('되돌릴 수 없습니다. 볼륨의 데이터는 복구할 수 없습니다.')}
+      ${fFld('대상', fTbl(['볼륨'], c.names.map(n => [`<span class="mono">${esc(n)}</span>`])))}
+      ${fFld('확인', `<input type="text" placeholder="삭제" autocomplete="off"
+        oninput="document.getElementById('volBulkOk').disabled = this.value.trim() !== '삭제'">`,
+        '진행하려면 <b>삭제</b>를 입력하세요.')}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-danger" id="volBulkOk" disabled onclick="dlgClose();doBulkVol()">삭제</button>`})
 };
 
 function dlg(k, ctx){
@@ -3992,7 +4346,7 @@ function wireLoose(root){
 wireLoose();
 
 function boot(){
-  const steps = [renderEnvList, renderInstances, renderVolumes, renderNetwork, renderTpl, renderAllQuota, wireLoose, makeRowsFocusable, responsify, () => setMode('user')];
+  const steps = [renderEnvList, renderInstances, renderVolumes, renderNetwork, renderTpl, renderAllQuota, renderOnboard, applyDashboard, renderTeamPending, wireLoose, makeRowsFocusable, responsify, () => setMode('user')];
   steps.forEach(fn => { try { fn(); } catch(err){ console.error('boot step failed', err); } });
 }
 boot();
