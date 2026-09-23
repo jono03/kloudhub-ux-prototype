@@ -678,6 +678,32 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
   <div id="dBody"></div>
 </section>
 
+<!-- ========== 인스턴스 상세 ========== -->
+<section data-view="inst-detail" hidden>
+  <div class="crumb"><button class="btn btn-sm btn-quiet" style="height:22px;padding:0 4px" onclick="go('instances')"><svg class="ic ic-sm"><use href="#i-back"/></svg></button>platform<span class="sp">/</span>인스턴스<span class="sp">/</span><span id="iCrumb"></span></div>
+  <div class="head">
+    <h1 id="iName"></h1>
+    <span id="iState"></span>
+    <div class="sub" id="iSub"></div>
+    <div class="grow"></div>
+    <div id="iActions" style="display:flex;gap:6px"></div>
+  </div>
+  <div id="iBody"></div>
+</section>
+
+<!-- ========== 볼륨 상세 ========== -->
+<section data-view="vol-detail" hidden>
+  <div class="crumb"><button class="btn btn-sm btn-quiet" style="height:22px;padding:0 4px" onclick="go('volumes')"><svg class="ic ic-sm"><use href="#i-back"/></svg></button>platform<span class="sp">/</span>볼륨<span class="sp">/</span><span id="vCrumb"></span></div>
+  <div class="head">
+    <h1 id="vName"></h1>
+    <span id="vState"></span>
+    <div class="sub" id="vSub"></div>
+    <div class="grow"></div>
+    <div id="vActions" style="display:flex;gap:6px"></div>
+  </div>
+  <div id="vBody"></div>
+</section>
+
 <!-- ========== 실패 작업 상세 ========== -->
 <section data-view="job-failed" hidden>
   <div class="crumb"><button class="btn btn-sm btn-quiet" style="height:22px;padding:0 4px" onclick="go('activity')"><svg class="ic ic-sm"><use href="#i-back"/></svg></button>platform<span class="sp">/</span>활동<span class="sp">/</span>job-8f21</div>
@@ -1115,6 +1141,15 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
   <div class="head"><h1>볼륨</h1><div class="sub" id="volSub"></div><div class="grow"></div>
     <button class="btn btn-pri rw" onclick="dlg('newVolume')"><svg class="ic ic-sm"><use href="#i-plus"/></svg>볼륨 생성</button></div>
 
+  <div id="volEmpty" hidden>
+    <div class="empty">
+      <h3>아직 볼륨이 없습니다</h3>
+      <p>환경을 만들면 부팅 볼륨이 자동으로 생성됩니다. 데이터 볼륨은 필요할 때 따로 만들 수 있어요.</p>
+      <button class="btn btn-pri rw" onclick="dlg('newVolume')"><svg class="ic ic-sm"><use href="#i-plus"/></svg>볼륨 생성</button>
+    </div>
+  </div>
+
+  <div id="volFull">
   <div class="toolbar" id="volFilters"></div>
   <div class="toolbar">
     <label class="search" style="width:280px;cursor:text">
@@ -1140,6 +1175,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     <tbody id="volRows"></tbody>
   </table></div>
   <div class="card-foot" id="volFoot"></div>
+  </div>
   </div>
 </section>
 
@@ -2095,7 +2131,9 @@ function createEnv(opts){
       e.state = 'running'; delete e.progress;
       e.access = `${e.id}.env.acme.internal`; e.ssh = `ssh dev@${e.id}.env.acme.internal`;
       e.iid = 'n-' + Math.random().toString(16).slice(2,10);
-      refreshAll(); toast(`${e.id} 준비 완료 — 접속 정보가 생성되었습니다`);
+      refreshAll();
+      // 기능 추가: 환경 준비 완료 직후 "다음 할 일"(터미널 접속)로 바로 연결
+      toastAction(`${e.id} 준비 완료 — 접속 정보가 생성되었습니다`, '터미널 열기', () => dlg('terminal', {id: e.id}), 6000);
       announce(`${e.id} 생성 완료`); return;
     }
     const [st,label,pct] = steps[i];
@@ -2220,8 +2258,8 @@ function renderInstances(){
 
   const body = document.getElementById('instRows'); if(!body) return;
   body.innerHTML = rows.length ? rows.map(i => `
-    <tr class="${instSel.has(i.n)?'sel':''}">
-      <td><input type="checkbox" ${instSel.has(i.n)?'checked':''} onchange="pickInst('${i.n}',this.checked)" aria-label="${i.n} 선택"></td>
+    <tr class="click ${instSel.has(i.n)?'sel':''}" onclick="openInst('${i.n}')">
+      <td><input type="checkbox" ${instSel.has(i.n)?'checked':''} onclick="event.stopPropagation()" onchange="pickInst('${i.n}',this.checked)" aria-label="${i.n} 선택"></td>
       <td class="name">${i.n}${i.orphan ? ' <span class="chip e">고아</span>' : (!i.env ? ' <span class="chip w">미배치</span>' : '')}</td>
       <td>${stTag({state:i.state})}</td>
       <td class="${i.env ? '' : 'faint'}">${i.env || '—'}</td>
@@ -2230,10 +2268,10 @@ function renderInstances(){
       <td class="dim mono">${i.be}</td>
       <td class="act">
         ${i.state === 'running'
-          ? `<button class="btn btn-sm rw" onclick="dlg('resize',{n:'${i.n}'})">크기 변경</button>`
-          : (i.env ? `<button class="btn btn-sm rw" onclick="dlg('startInst',{n:'${i.n}'})">시작</button>`
-                   : (i.orphan ? `<button class="btn btn-sm btn-warn rw" onclick="dlg('delInstance',{n:'${i.n}'})">회수</button>`
-                               : `<button class="btn btn-sm rw" onclick="dlg('assignEnv',{n:'${i.n}'})">환경에 배치</button>`))}
+          ? `<button class="btn btn-sm rw" onclick="event.stopPropagation();dlg('resize',{n:'${i.n}'})">크기 변경</button>`
+          : (i.env ? `<button class="btn btn-sm rw" onclick="event.stopPropagation();dlg('startInst',{n:'${i.n}'})">시작</button>`
+                   : (i.orphan ? `<button class="btn btn-sm btn-warn rw" onclick="event.stopPropagation();dlg('delInstance',{n:'${i.n}'})">회수</button>`
+                               : `<button class="btn btn-sm rw" onclick="event.stopPropagation();dlg('assignEnv',{n:'${i.n}'})">환경에 배치</button>`))}
         <button class="btn btn-sm btn-quiet rw" onclick="instMenu(event,'${i.n}','${i.state}')"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>`).join('')
     : `<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-2)">
         ${q ? `"${esc(instQuery)}" 와(과) 일치하는 인스턴스가 없습니다.` : '조건에 맞는 인스턴스가 없습니다.'}
@@ -2248,6 +2286,48 @@ function renderInstances(){
     : '';
   const nav = document.querySelector('[data-nav="instances"] .cnt'); if(nav) nav.textContent = counts.all;
   responsify(document.querySelector('[data-view="instances"]'));
+}
+
+// 기능 추가: 인스턴스 상세 페이지 (목록 클릭 시 콘솔·재시작·로그 등 다음 행동을 바로 제공)
+let curInst = null;
+function openInst(n){ curInst = n; go('inst-detail'); }
+function renderInstDetail(){
+  const i = instances().find(x => x.n === curInst); if(!i) return;
+  document.getElementById('iCrumb').textContent = i.n;
+  document.getElementById('iName').textContent = i.n;
+  document.getElementById('iState').innerHTML = stTag({state:i.state});
+  document.getElementById('iSub').textContent = `${i.env || '미배치'} · ${i.be} · ${i.ip}`;
+  document.getElementById('iActions').innerHTML = `
+    ${!i.orphan ? `<button class="btn rw" onclick="dlg('console',{n:'${i.n}'})"><svg class="ic ic-sm"><use href="#i-term"/></svg>콘솔</button>` : ''}
+    ${i.state==='running'
+      ? `<button class="btn rw" onclick="dlg('restartEnv',{id:'${i.n}'})"><svg class="ic ic-sm"><use href="#i-retry"/></svg>재시작</button><button class="btn rw" onclick="dlg('stopEnv',{id:'${i.n}'})">정지</button>`
+      : (i.orphan ? `<button class="btn btn-warn rw" onclick="dlg('delInstance',{n:'${i.n}'})">회수</button>`
+                  : `<button class="btn btn-pri rw" onclick="dlg('startInst',{n:'${i.n}'})"><svg class="ic ic-sm"><use href="#i-play"/></svg>시작</button>`)}
+    <button class="btn btn-quiet rw" onclick="instMenu(event,'${i.n}','${i.state}')"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button>`;
+  document.getElementById('iBody').innerHTML = `
+    <div class="g2">
+      <div class="sec">
+        <div class="sec-head"><h2>정보</h2></div>
+        <div class="card"><div class="card-body">
+          <div class="kv">
+            <span class="k">환경</span><span class="v">${i.env ? `<a href="#" onclick="event.preventDefault();openEnv('${i.env}')">${esc(i.env)}</a>` : '미배치'}</span>
+            <span class="k">서버 타입</span><span class="v mono">${esc(i.type)}</span>
+            <span class="k">이미지</span><span class="v">${esc(i.img)}</span>
+            <span class="k">내부 IP</span><span class="v mono">${esc(i.ip)}</span>
+            <span class="k">공인 IP</span><span class="v mono">${i.fip ? esc(i.fip) : '—'}</span>
+            <span class="k">존</span><span class="v">${esc(i.be)}</span>
+          </div>
+        </div></div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>최근 로그</h2></div>
+        <div class="card"><div class="card-body">
+          <div class="pre" style="min-height:120px">${i.state==='running'
+            ? '[방금] health check 통과\n[1분 전] 애플리케이션 프로세스 시작\n[2분 전] cloud-init 완료'
+            : '중지된 인스턴스는 로그를 표시하지 않습니다. 시작 후 다시 확인하세요.'}</div>
+        </div></div>
+      </div>
+    </div>`;
 }
 
 /* ---------- 볼륨 화면 ---------- */
@@ -2274,8 +2354,8 @@ function renderVolumes(){
 
   const body = document.getElementById('volRows'); if(!body) return;
   body.innerHTML = rows.length ? rows.map(v => `
-    <tr class="${volSel.has(v.n)?'sel':''}">
-      <td><input type="checkbox" ${volSel.has(v.n)?'checked':''} onchange="pickVol('${v.n}',this.checked)" aria-label="${v.n} 선택"></td>
+    <tr class="click ${volSel.has(v.n)?'sel':''}" onclick="openVol('${v.n}')">
+      <td><input type="checkbox" ${volSel.has(v.n)?'checked':''} onclick="event.stopPropagation()" onchange="pickVol('${v.n}',this.checked)" aria-label="${v.n} 선택"></td>
       <td class="name">${v.n}${v.orphan ? ' <span class="chip e">고아</span>' : ''}</td>
       <td>${v.att ? (v.stopped ? '<span class="st stop">연결됨 · 정지</span>' : '<span class="st run">연결됨</span>') : '<span class="st stop">분리됨</span>'}</td>
       <td class="num">${gb(v.gb)}</td><td class="dim">${v.kind}</td>
@@ -2283,8 +2363,8 @@ function renderVolumes(){
       <td class="${v.env ? '' : 'faint'}">${v.env || '—'}</td>
       <td class="dim mono">${v.be}</td>
       <td class="act">
-        ${v.att ? `<button class="btn btn-sm rw" onclick="dlg('expandVol',{n:'${v.n}',gb:${v.gb}})">확장</button>`
-                : `<button class="btn btn-sm rw" onclick="dlg('attachVol',{n:'${v.n}'})">연결</button>`}
+        ${v.att ? `<button class="btn btn-sm rw" onclick="event.stopPropagation();dlg('expandVol',{n:'${v.n}',gb:${v.gb}})">확장</button>`
+                : `<button class="btn btn-sm rw" onclick="event.stopPropagation();dlg('attachVol',{n:'${v.n}'})">연결</button>`}
         <button class="btn btn-sm btn-quiet rw" onclick="volMenu(event,'${v.n}',${!!v.att})"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>`).join('')
     : `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-2)">
         ${q ? `"${esc(volQuery)}" 와(과) 일치하는 볼륨이 없습니다.` : '조건에 맞는 볼륨이 없습니다.'}
@@ -2298,6 +2378,42 @@ function renderVolumes(){
   document.getElementById('volFoot').textContent = `${counts.all}개 중 ${rows.length}개 표시 · 분리된 볼륨도 디스크 쿼터를 점유합니다`;
   const nav = document.querySelector('[data-nav="volumes"] .cnt'); if(nav) nav.textContent = counts.all;
   responsify(document.querySelector('[data-view="volumes"]'));
+}
+
+// 기능 추가: 볼륨 상세 페이지 (목록 클릭 시 연결·확장·스냅샷 등 다음 행동을 바로 제공)
+let curVol = null;
+function openVol(n){ curVol = n; go('vol-detail'); }
+function renderVolDetail(){
+  const v = volumes().find(x => x.n === curVol); if(!v) return;
+  document.getElementById('vCrumb').textContent = v.n;
+  document.getElementById('vName').textContent = v.n;
+  document.getElementById('vState').innerHTML = v.att ? (v.stopped ? '<span class="st stop">연결됨 · 정지</span>' : '<span class="st run">연결됨</span>') : '<span class="st stop">분리됨</span>';
+  document.getElementById('vSub').textContent = `${gb(v.gb)} · ${v.kind} · ${v.be}`;
+  document.getElementById('vActions').innerHTML = `
+    ${v.att ? `<button class="btn rw" onclick="dlg('expandVol',{n:'${v.n}',gb:${v.gb}})">확장</button>
+               <button class="btn rw" onclick="dlg('detachVol',{n:'${v.n}'})">분리</button>`
+            : `<button class="btn btn-pri rw" onclick="dlg('attachVol',{n:'${v.n}'})">연결</button>`}
+    <button class="btn btn-quiet rw" onclick="volMenu(event,'${v.n}',${!!v.att})"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button>`;
+  document.getElementById('vBody').innerHTML = `
+    <div class="g2">
+      <div class="sec">
+        <div class="sec-head"><h2>정보</h2></div>
+        <div class="card"><div class="card-body">
+          <div class="kv">
+            <span class="k">크기</span><span class="v mono">${gb(v.gb)}</span>
+            <span class="k">종류</span><span class="v">${esc(v.kind)}</span>
+            <span class="k">연결 대상</span><span class="v">${v.att ? `<a href="#" onclick="event.preventDefault();openInst('${v.att}')">${esc(v.att)}</a> <span class="faint mono">${v.dev||''}</span>` : '—'}</span>
+            <span class="k">환경</span><span class="v">${v.env ? `<a href="#" onclick="event.preventDefault();openEnv('${v.env}')">${esc(v.env)}</a>` : '—'}</span>
+            <span class="k">존</span><span class="v">${esc(v.be)}</span>
+          </div>
+        </div></div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>스냅샷</h2><div class="grow"></div>
+          <button class="btn btn-sm rw" onclick="dlg('snapCreate',{id:'${v.env||v.n}'})">스냅샷 생성</button></div>
+        <div class="card"><div class="card-body" style="color:var(--text-2)">이 볼륨의 스냅샷이 없습니다.</div></div>
+      </div>
+    </div>`;
 }
 
 /* ---------- 네트워크 파생 ---------- */
@@ -2917,9 +3033,11 @@ function go(v){
     document.getElementById('navAdmin').hidden = !wantAdmin;
   }
   document.querySelectorAll('[data-view]').forEach(s => s.hidden = (s.dataset.view !== v));
-  const k = (v==='env-detail') ? 'environments' : (v==='job-failed' ? 'activity' : (v==='tpl-detail' ? 'templates' : (v==='projects' ? 'settings' : v)));
+  const k = (v==='env-detail') ? 'environments' : (v==='job-failed' ? 'activity' : (v==='tpl-detail' ? 'templates' : (v==='projects' ? 'settings' : (v==='inst-detail' ? 'instances' : (v==='vol-detail' ? 'volumes' : v)))));
   document.querySelectorAll('.navitem').forEach(b => b.setAttribute('aria-current', b.dataset.nav===k ? 'page':'false'));
   if(v==='env-detail') renderDetail();
+  if(v==='inst-detail') renderInstDetail();
+  if(v==='vol-detail') renderVolDetail();
   setTimeout(() => responsify(document.querySelector(`[data-view="${v}"]`)), 0);
   if(v==='tpl-detail') renderTplDetail();
   window.scrollTo(0,0);
@@ -2931,6 +3049,8 @@ function toggleEmpty(){
   closeMenus(); emptyMode = !emptyMode;
   $('#ovEmpty').hidden = !emptyMode; $('#ovFull').hidden = emptyMode;
   $('#envEmpty').hidden = !emptyMode; $('#envFull').hidden = emptyMode;
+  // 기능 추가: 볼륨 페이지도 빈 상태 화면 지원 (기존엔 환경만 지원했음)
+  $('#volEmpty').hidden = !emptyMode; $('#volFull').hidden = emptyMode;
   $('#ovEditBtn').hidden = emptyMode;
   toast(emptyMode ? '빈 상태를 표시합니다' : '기본 데이터로 돌아왔습니다');
 }
