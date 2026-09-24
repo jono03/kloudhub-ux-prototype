@@ -427,11 +427,9 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
   <div class="vr"></div>
   <div style="position:relative">
     <button class="picker" onclick="menu(event,'mProj')">프로젝트 <b class="mono">platform</b><svg class="ic ic-sm"><use href="#i-chev"/></svg></button>
-    <div class="menu" id="mProj" style="top:34px;left:0">
+    <div class="menu" id="mProj" style="top:34px;left:0;min-width:230px">
       <div class="mlbl">프로젝트</div>
-      <button aria-checked="true" onclick="closeMenus()">platform</button>
-      <button aria-checked="false" onclick="closeMenus();toast('infra으로 전환했습니다')">infra</button>
-      <button aria-checked="false" onclick="closeMenus();toast('team-web로 전환했습니다')">team-web</button>
+      <div id="mProjList"></div>
       <div class="msep"></div>
       <button class="rw" onclick="dlg('addProject')"><svg class="ic ic-sm"><use href="#i-plus"/></svg>새 프로젝트</button>
       <button onclick="closeMenus();go('projects')"><svg class="ic ic-sm"><use href="#i-folder"/></svg>내 프로젝트</button>
@@ -463,7 +461,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
         <span><span class="nt"><b>ci-runner</b>가 3일 후 만료됩니다.</span><span class="nm2">오늘 09:00</span></span></button>
       <button class="nrow" onclick="closeMenus();go('quota')">
         <span class="st warn" style="margin-top:3px"></span>
-        <span><span class="nt">vCPU 쿼터가 82%에 도달했습니다.</span><span class="nm2">오늘 08:00</span></span></button>
+        <span><span class="nt" id="notifQuotaPct">vCPU 쿼터가 80%를 넘었습니다.</span><span class="nm2">오늘 08:00</span></span></button>
     </div>
   </div>
   <div style="position:relative">
@@ -506,7 +504,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     </div>
 
     <div class="navsep"></div>
-    <button class="navitem" data-nav="quota" onclick="go('quota')"><svg class="ic"><use href="#i-gauge"/></svg>쿼터<span class="cnt">82%</span></button>
+    <button class="navitem" data-nav="quota" onclick="go('quota')"><svg class="ic"><use href="#i-gauge"/></svg>쿼터<span class="cnt"></span></button>
     <button class="navitem" data-nav="activity" onclick="go('activity')"><svg class="ic"><use href="#i-pulse"/></svg>활동<span class="cnt">2</span></button>
 
     <div class="navsep"></div>
@@ -575,9 +573,9 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
       </div>
       <div class="banner" data-alert>
         <svg class="ic"><use href="#i-warn"/></svg>
-        <div><b>data-etl</b>이 12일째 정지 상태입니다. 정지해도 디스크는 반납되지 않습니다.
+        <div><b>data-etl</b>이 12일째 정지 상태입니다. 정지해도 vCPU·메모리·디스크 쿼터는 그대로 점유합니다.
           <div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">
-            <button class="btn btn-sm rw" onclick="dlg('snapCreate',{id:'data-etl'})">스냅샷 후 삭제</button>
+            <button class="btn btn-sm rw" onclick="dlg('snapThenDelete',{id:'data-etl'})">스냅샷 후 삭제</button>
             <button class="btn btn-sm btn-warn rw" onclick="openDel('data-etl')">삭제</button>
             <button class="btn btn-sm btn-quiet" onclick="openEnv('data-etl')">열어보기</button>
           </div></div>
@@ -806,23 +804,35 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
 <!-- ========== 쿼터 ========== -->
 <section data-view="quota" hidden>
   <div class="crumb">platform<span class="sp">/</span>쿼터</div>
-  <div class="head"><h1>쿼터</h1><div class="sub">프로젝트 상한 대비 현재 점유</div></div>
+  <div class="head"><h1>쿼터</h1><div class="sub">프로젝트 상한 대비 현재 점유</div><div class="grow"></div>
+    <button class="btn btn-sm rw" onclick="dlg('quotaRequest',{})"><svg class="ic ic-sm"><use href="#i-plus"/></svg>쿼터 상향 요청</button></div>
   <div class="sec"><div class="card"><div class="card-body" style="padding:4px 14px" id="qFull"></div>
-    <div class="card-foot">시스템 VM 1대(프로젝트 VPC 라우터)와 고아 리소스 2건이 포함된 값입니다. 커스텀 이미지 용량(42GB)은 디스크 쿼터에도 함께 잡힙니다.</div></div></div>
+    <div class="card-foot" id="qFullFoot"></div></div></div>
 
   <div class="sec">
-    <div class="sec-head"><h2>회수 대상</h2><div class="sub">3건</div></div>
+    <div class="sec-head"><h2>회수 대상</h2><div class="sub" id="qReclaimSub"></div></div>
     <div class="card"><div class="tw"><table>
       <thead><tr><th>대상</th><th>사유</th><th>점유</th><th></th></tr></thead>
-      <tbody>
-        <tr><td class="name">data-etl</td><td><span class="st warn">12일째 정지</span></td><td class="dim mono">8 vCPU · 32GB · 200GB</td>
-          <td class="act"><button class="btn btn-sm rw" onclick="dlg('snapCreate',{id:'data-etl'})">스냅샷 후 삭제</button> <button class="btn btn-sm btn-warn rw" onclick="openDel('data-etl')">삭제</button></td></tr>
-        <tr><td class="name">ci-runner</td><td><span class="st warn">3일 후 만료</span></td><td class="dim mono">4 vCPU · 8GB · 60GB</td>
-          <td class="act"><button class="btn btn-sm rw" onclick="dlg('extend',{id:'ci-runner'})">연장</button> <button class="btn btn-sm btn-warn rw" onclick="openDel('ci-runner')">삭제</button></td></tr>
-        <tr><td class="name">고아 리소스 2건</td><td><span class="st err">old-ci 생성 실패</span></td><td class="dim mono">2 vCPU · 4GB · 40GB</td>
-          <td class="act"><button class="btn btn-sm rw" onclick="go('job-failed')">작업 상세</button> <button class="btn btn-sm btn-warn rw" onclick="toast('고아 리소스를 회수했습니다')">회수</button></td></tr>
-      </tbody>
+      <tbody id="qReclaimRows"></tbody>
     </table></div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><h2>곧 반납될 쿼터</h2><div class="sub" id="qUpcomingSub"></div></div>
+    <div class="card"><div class="tw"><table>
+      <thead><tr><th>대상</th><th>반납까지</th><th class="num">vCPU</th><th class="num">메모리</th><th class="num">디스크</th></tr></thead>
+      <tbody id="qUpcomingRows"></tbody>
+    </table></div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><h2>멤버별 점유</h2></div>
+    <div class="card"><div class="tw"><table>
+      <thead><tr><th>멤버</th><th class="num">환경</th><th class="num">vCPU</th></tr></thead>
+      <tbody id="qMemberRows"></tbody>
+    </table></div>
+    <div class="card-foot" id="qMemberFoot"></div>
+    </div>
   </div>
 
   <div class="sec">
@@ -831,7 +841,17 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
       <thead><tr><th>환경</th><th class="num">vCPU</th><th class="num">메모리</th><th class="num">디스크</th><th>상태</th></tr></thead>
       <tbody id="qEnvRows"></tbody>
     </table></div>
-    <div class="card-foot">정지된 환경도 디스크는 반납되지 않습니다.</div>
+    <div class="card-foot">정지해도 vCPU·메모리·디스크 쿼터는 그대로 점유합니다. 쿼터를 비우려면 삭제하세요.</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><h2>쿼터 상향 요청 이력</h2></div>
+    <div class="card"><div class="tw"><table>
+      <thead><tr><th>항목</th><th>요청량</th><th>기간</th><th>사유</th><th>상태</th></tr></thead>
+      <tbody id="qRequestRows"></tbody>
+    </table></div>
+    <div class="card-foot" id="qRequestFoot">아직 요청한 이력이 없습니다.</div>
     </div>
   </div>
 </section>
@@ -843,11 +863,8 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     <button class="btn btn-pri rw" onclick="dlg('saveImage',{})"><svg class="ic ic-sm"><use href="#i-plus"/></svg>이미지 만들기</button></div>
 
   <div class="sec">
-    <div class="card"><div class="card-body" style="padding:4px 14px">
-      <div class="qrow"><span class="lb">커스텀 이미지</span><span class="bar"><i style="width:60%"></i></span><span class="vl">3 <em>/ 5 개</em></span><span class="pc">60%</span></div>
-      <div class="qrow"><span class="lb">이미지 용량</span><span class="bar"><i class="hot" style="width:84%"></i></span><span class="vl">42 <em>/ 50 GB</em></span><span class="pc">84%</span></div>
-    </div>
-    <div class="card-foot">이미지 용량은 프로젝트 디스크 쿼터에도 함께 잡힙니다. 보관 기간이 지나면 자동 삭제됩니다.</div></div>
+    <div class="card"><div class="card-body" style="padding:4px 14px" id="imgQuota"></div>
+    <div class="card-foot">커스텀 이미지는 디스크 쿼터와 분리된 개수·용량 쿼터로 관리됩니다. 보관 기간이 지나면 자동 삭제됩니다.</div></div>
   </div>
 
   <div class="toolbar">
@@ -949,18 +966,11 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
 <!-- ========== 스냅샷 ========== -->
 <section data-view="snapshots" hidden>
   <div class="crumb">platform<span class="sp">/</span>리소스<span class="sp">/</span>스냅샷</div>
-  <div class="head"><h1>스냅샷</h1><div class="sub">3개 · 디스크 쿼터 260GB 점유</div><div class="grow"></div>
+  <div class="head"><h1>스냅샷</h1><div class="sub" id="snapHead"></div><div class="grow"></div>
     <button class="btn rw" onclick="dlg('snapCreate',{})"><svg class="ic ic-sm"><use href="#i-plus"/></svg>스냅샷 생성</button></div>
   <div class="card"><div class="tw"><table>
     <thead><tr><th>이름</th><th>원본</th><th class="num">크기</th><th>존</th><th>만든 이</th><th>생성</th><th>보관</th><th></th></tr></thead>
-    <tbody>
-      <tr><td class="name">data-etl-0919</td><td class="mono dim">data-etl</td><td class="num">200 GB</td><td class="dim mono">kr-b</td><td class="dim">dkim</td><td class="dim mono">09-19 07:12</td><td class="dim mono">90일</td>
-        <td class="act"><button class="btn btn-sm rw" onclick="openRestore()">복원</button> <button class="btn btn-sm btn-quiet rw"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
-      <tr><td class="name">pg-staging-0912</td><td class="mono dim">pg-staging</td><td class="num">40 GB</td><td class="dim mono">kr-a</td><td class="dim">jlee</td><td class="dim mono">09-12 18:40</td><td class="dim mono">30일</td>
-        <td class="act"><button class="btn btn-sm rw" onclick="openRestore()">복원</button> <button class="btn btn-sm btn-quiet rw"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
-      <tr><td class="name">dev-sandbox-0901 <span class="chip w">만료 임박</span></td><td class="mono dim">dev-sandbox</td><td class="num">20 GB</td><td class="dim mono">kr-a</td><td class="dim">sh</td><td class="dim mono">09-01 11:02</td><td class="mono" style="color:var(--warn)">2일</td>
-        <td class="act"><button class="btn btn-sm rw" onclick="openRestore()">복원</button> <button class="btn btn-sm btn-quiet rw"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
-    </tbody>
+    <tbody id="snapRows"></tbody>
   </table></div>
   <div class="card-foot">스냅샷은 디스크 쿼터를 점유합니다. 보관 기간이 지나면 자동 삭제됩니다.</div>
   </div>
@@ -1028,14 +1038,9 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     <button class="btn btn-pri adminonly" onclick="openInvite()">멤버 초대</button></div>
   <div class="card"><div class="tw"><table>
     <thead><tr><th>이름</th><th>역할</th><th class="num">환경</th><th class="num">vCPU 점유</th><th>마지막 활동</th><th></th></tr></thead>
-    <tbody id="teamRows">
-      <tr><td class="name">sh</td><td class="dim">관리자</td><td class="num">3</td><td class="num">18</td><td class="dim mono">방금</td><td class="act adminonly"><button class="btn btn-sm btn-quiet"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
-      <tr><td class="name">jlee</td><td class="dim">멤버</td><td class="num">1</td><td class="num">2</td><td class="dim mono">2시간 전</td><td class="act adminonly"><button class="btn btn-sm btn-quiet"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
-      <tr><td class="name">dkim</td><td class="dim">멤버</td><td class="num">2</td><td class="num">10</td><td class="dim mono">어제</td><td class="act adminonly"><button class="btn btn-sm btn-quiet"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
-      <tr><td class="name">ypark</td><td class="dim">읽기 전용</td><td class="num">0</td><td class="num">0</td><td class="dim mono">3일 전</td><td class="act adminonly"><button class="btn btn-sm btn-quiet"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
-    </tbody>
+    <tbody id="teamRows"></tbody>
   </table></div>
-  <div class="card-foot">역할은 환경 생성·삭제 권한과 관리자 메뉴 노출을 결정합니다.</div>
+  <div class="card-foot">역할은 환경 생성·삭제 권한과 관리자 메뉴 노출을 결정합니다. <span id="teamCpuNote" class="dim"></span></div>
   </div>
 </section>
 
@@ -1194,7 +1199,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
   <div class="card"><div class="tw"><table>
     <thead><tr><th>이름</th><th>역할</th><th>용도</th><th class="num">멤버</th><th class="num">환경</th><th>쿼터</th><th>배치</th><th>상태</th><th></th></tr></thead>
     <tbody>
-      <tr class="click" onclick="toast('platform 으로 전환했습니다')"><td class="name">platform <span class="chip">현재</span></td><td class="dim">관리자</td><td class="dim">개발팀</td><td class="num">4</td><td class="num">7</td><td class="mono dim">33 / 40 vCPU</td><td class="dim mono">두 존 모두</td><td><span class="st run">활성</span></td>
+      <tr class="click" onclick="toast('platform 으로 전환했습니다')"><td class="name">platform <span class="chip">현재</span></td><td class="dim">관리자</td><td class="dim">개발팀</td><td class="num">4</td><td class="num">7</td><td class="mono dim" id="myProjQuota"></td><td class="dim mono">두 존 모두</td><td><span class="st run">활성</span></td>
         <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="event.stopPropagation();dlg('editProject',{name:'platform'})">설정</button></td></tr>
       <tr class="click" onclick="toast('infra 로 전환했습니다')"><td class="name">infra</td><td class="dim">멤버</td><td class="dim">개발팀</td><td class="num">6</td><td class="num">3</td><td class="mono dim">9 / 16 vCPU</td><td class="dim mono">zone-a</td><td><span class="st run">활성</span></td>
         <td class="act"><button class="btn btn-sm btn-quiet" onclick="event.stopPropagation();toast('멤버는 설정을 볼 수 없습니다')">설정</button></td></tr>
@@ -1225,8 +1230,8 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     <tbody>
       <tr class="click" onclick="go('job-failed')"><td><span class="st err">실패</span></td><td>생성이 3/6 단계에서 실패했습니다. 고아 리소스 2건이 남았습니다.</td><td class="mono">old-ci</td><td class="dim mono">09-19 08:48</td><td class="act"><button class="btn btn-sm">작업 상세</button></td></tr>
       <tr class="click" onclick="openEnv('ci-runner')"><td><span class="st warn">만료</span></td><td>3일 후 만료됩니다. 연장하지 않으면 자동 회수됩니다.</td><td class="mono">ci-runner</td><td class="dim mono">09-19 09:00</td><td class="act"><button class="btn btn-sm rw" onclick="event.stopPropagation();dlg('extend',{id:'ci-runner'})">연장</button></td></tr>
-      <tr class="click" onclick="go('quota')"><td><span class="st warn">쿼터</span></td><td>vCPU 사용률이 82%에 도달했습니다.</td><td class="mono">platform</td><td class="dim mono">09-19 08:00</td><td class="act"><button class="btn btn-sm">쿼터</button></td></tr>
-      <tr class="click" onclick="openEnv('data-etl')"><td><span class="st warn">회수</span></td><td>12일째 정지 상태입니다. 디스크를 계속 점유합니다.</td><td class="mono">data-etl</td><td class="dim mono">09-18 09:00</td><td class="act"><button class="btn btn-sm">열기</button></td></tr>
+      <tr class="click" onclick="go('quota')"><td><span class="st warn">쿼터</span></td><td id="notifCenterQuotaPct">vCPU 사용률이 80%를 넘었습니다.</td><td class="mono">platform</td><td class="dim mono">09-19 08:00</td><td class="act"><button class="btn btn-sm">쿼터</button></td></tr>
+      <tr class="click" onclick="openEnv('data-etl')"><td><span class="st warn">회수</span></td><td>12일째 정지 상태입니다. vCPU·메모리·디스크 쿼터를 그대로 점유합니다.</td><td class="mono">data-etl</td><td class="dim mono">09-18 09:00</td><td class="act"><button class="btn btn-sm">열기</button></td></tr>
       <tr class="click" onclick="go('snapshots')"><td><span class="st warn">만료</span></td><td>스냅샷 보관 기간이 2일 남았습니다.</td><td class="mono">dev-sandbox-0901</td><td class="dim mono">09-18 07:00</td><td class="act"><button class="btn btn-sm">스냅샷</button></td></tr>
       <tr class="click" onclick="go('templates')"><td><span class="st run">동기화</span></td><td>템플릿 저장소에서 10건을 동기화했습니다.</td><td class="mono">kloudhub/templates</td><td class="dim mono">09-18 22:10</td><td class="act"><button class="btn btn-sm">템플릿</button></td></tr>
       <tr class="click" onclick="openEnv('pg-staging')"><td><span class="st run">자동 정지</span></td><td>2시간 유휴로 자동 정지되었습니다.</td><td class="mono">pg-staging</td><td class="dim mono">09-16 16:41</td><td class="act"><button class="btn btn-sm">열기</button></td></tr>
@@ -1258,7 +1263,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
   <div class="card"><div class="tw"><table>
     <thead><tr><th>이름</th><th>용도</th><th>만든 이</th><th class="num">멤버</th><th class="num">환경</th><th class="num">vCPU</th><th class="num">디스크</th><th>백엔드 매핑</th><th>상태</th><th></th></tr></thead>
     <tbody>
-      <tr><td class="name">platform</td><td class="dim">개발팀</td><td class="dim">sh</td><td class="num">4</td><td class="num">7</td><td class="num">35 / 40</td><td class="num">750 / 1024</td><td class="dim mono">OS platform · CS platform</td><td><span class="st run">활성</span></td><td class="act"><button class="btn btn-sm btn-quiet" onclick="dlg('editProject',{name:'platform'})">편집</button></td></tr>
+      <tr><td class="name">platform</td><td class="dim">개발팀</td><td class="dim">sh</td><td class="num">4</td><td class="num">7</td><td class="num" id="adminProjCpu">35 / 40</td><td class="num" id="adminProjDisk">1338 / 1536</td><td class="dim mono">OS platform · CS platform</td><td><span class="st run">활성</span></td><td class="act"><button class="btn btn-sm btn-quiet" onclick="dlg('editProject',{name:'platform'})">편집</button></td></tr>
       <tr><td class="name">infra</td><td class="dim">개발팀</td><td class="dim">jlee</td><td class="num">6</td><td class="num">3</td><td class="num">9 / 16</td><td class="num">180 / 512</td><td class="dim mono">OS infra</td><td><span class="st run">활성</span></td><td class="act"><button class="btn btn-sm btn-quiet" onclick="dlg('editProject',{name:'infra'})">편집</button></td></tr>
       <tr><td class="name">team-web</td><td class="dim">교육</td><td class="dim">dkim</td><td class="num">48</td><td class="num">31</td><td class="num">60 / 64</td><td class="num">1900 / 2048</td><td class="dim mono">OS team-web</td><td><span class="st warn">쿼터 94%</span></td><td class="act"><button class="btn btn-sm btn-quiet" onclick="dlg('editProject',{name:'team-web'})">편집</button></td></tr>
       <tr><td class="name">team-search <span class="chip w">승인 대기</span></td><td class="dim">실험</td><td class="dim">dkim</td><td class="num">2</td><td class="num faint">0</td><td class="num">— / 32</td><td class="num">— / 512</td><td class="faint">생성 대기</td><td><span class="st warn">쿼터 상향 요청</span></td>
@@ -1420,12 +1425,12 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
   <div class="card"><div class="tw"><table>
     <thead><tr><th>프로젝트</th><th class="num">vCPU</th><th class="num">메모리</th><th class="num">디스크</th><th class="num">커스텀 이미지</th><th class="num">이미지 용량</th><th>이미지 보관</th><th>기본 만료</th><th>연장 상한</th><th>보호 권한</th><th>스크립트</th><th></th></tr></thead>
     <tbody>
-      <tr><td class="name">platform</td><td class="num">40</td><td class="num">160 GB</td><td class="num">1024 GB</td><td class="num">5</td><td class="num">50 GB</td><td class="dim mono">90일</td><td class="dim mono">30일</td><td class="dim mono">무제한</td><td class="dim">관리자</td><td class="dim">허용</td><td class="act"><button class="btn btn-sm btn-quiet">편집</button></td></tr>
+      <tr><td class="name">platform</td><td class="num">40</td><td class="num">160 GB</td><td class="num">1536 GB</td><td class="num">5</td><td class="num">50 GB</td><td class="dim mono">90일</td><td class="dim mono">30일</td><td class="dim mono">무제한</td><td class="dim">관리자</td><td class="dim">허용</td><td class="act"><button class="btn btn-sm btn-quiet">편집</button></td></tr>
       <tr><td class="name">infra</td><td class="num">16</td><td class="num">64 GB</td><td class="num">512 GB</td><td class="num">3</td><td class="num">30 GB</td><td class="dim mono">90일</td><td class="dim mono">30일</td><td class="dim mono">3회</td><td class="dim">관리자</td><td class="dim">허용</td><td class="act"><button class="btn btn-sm btn-quiet">편집</button></td></tr>
       <tr><td class="name">team-web</td><td class="num">64</td><td class="num">256 GB</td><td class="num">2048 GB</td><td class="num">1</td><td class="num">20 GB</td><td class="dim mono">14일</td><td class="dim mono">14일</td><td class="dim mono">1회</td><td class="dim">불가</td><td class="dim">등록된 것만</td><td class="act"><button class="btn btn-sm btn-quiet">편집</button></td></tr>
     </tbody>
   </table></div>
-  <div class="card-foot">삭제 보호가 걸린 환경은 만료되지 않지만 쿼터는 점유합니다. 커스텀 이미지는 개수·용량·보관 기간으로 제한하며, 용량은 디스크 쿼터에도 함께 반영됩니다.</div>
+  <div class="card-foot">삭제 보호가 걸린 환경은 만료되지 않지만 쿼터는 점유합니다. 커스텀 이미지는 디스크 쿼터와 분리된 개수·용량·보관 기간으로 제한합니다.</div>
   </div>
 
   <div class="sec" style="margin-top:26px">
@@ -1555,6 +1560,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     </div>
 
     <div class="m-body" id="wz2" hidden>
+      <div id="wzWarnBanner"></div>
       <div class="frow"><div class="lbl">이름</div><input type="text" value="dev-sandbox-2" oninput="renderWzPlan()"></div>
       <div class="frow"><div class="lbl">런타임</div>
         <div class="opts">
@@ -1570,9 +1576,13 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
           <button class="opt" data-cpu="8" data-mem="16" disabled>L<span class="o2">8 vCPU · 16GB</span></button>
         </div>
         <p class="hint w" id="wzQuotaHint">L은 남은 vCPU 쿼터를 초과합니다.
-          <button class="btn btn-sm btn-quiet" onclick="closeWizard();go('quota')">쿼터 정리</button></p></div>
+          <button class="btn btn-sm btn-quiet" onclick="closeWizard();go('quota')">쿼터 정리</button>
+          <button class="btn btn-sm btn-quiet" onclick="dlg('quotaRequest',{item:'cpu'})">쿼터 상향 요청</button></p></div>
       <div class="frow"><div class="lbl">디스크 <span class="mono" id="dskv">50 GB</span></div>
-        <input type="range" min="20" max="200" step="10" value="50" oninput="document.getElementById('dskv').textContent=this.value+' GB';renderWzPlan()"></div>
+        <input type="range" min="20" max="200" step="10" value="50" oninput="document.getElementById('dskv').textContent=this.value+' GB';delta()">
+        <p class="hint w" id="wzDiskHint" hidden>디스크 쿼터를 초과합니다.
+          <button class="btn btn-sm btn-quiet" onclick="closeWizard();go('quota')">쿼터 정리</button>
+          <button class="btn btn-sm btn-quiet" onclick="dlg('quotaRequest',{item:'disk'})">쿼터 상향 요청</button></p></div>
       <div class="frow"><div class="lbl">접근</div>
         <div class="opts" id="wzAccessOpts">
           <button class="opt" aria-pressed="true" onclick="tog(this);renderWzPlan()">SSH — 내 IP만</button>
@@ -1774,7 +1784,7 @@ runcmd:
           <button class="opt" aria-pressed="false" onclick="one(this)">디스크만 복원<span class="o2">볼륨으로 생성</span></button>
         </div></div>
       <div class="frow" style="margin-bottom:0"><div class="lbl">새 환경 이름</div><input type="text" value="data-etl-restored">
-        <p class="hint">복원 후 쿼터 vCPU <b class="mono">33 → 41</b> / 40 — 상한을 초과합니다. 먼저 회수 대상을 정리하세요.</p></div>
+        <p class="hint" id="resQuotaHint"></p></div>
     </div>
     <div class="m-foot"><button class="btn btn-sm btn-quiet" onclick="closeRestore();go('quota')">쿼터 정리</button>
       <div class="grow"></div><button class="btn" onclick="closeRestore()">취소</button>
@@ -1860,7 +1870,7 @@ const STATES = {
 };
 
 const ENVS = [
-  { id:'dev-sandbox', tpl:'개발 VM', tv:'1.4', state:'running', cpu:2, mem:8, disk:50,
+  { id:'dev-sandbox', tpl:'개발 VM', tv:'1.4', state:'running', cpu:2, mem:8, disk:50, owner:'sh',
     access:'203.0.113.42', pubip:'203.0.113.42', ssh:'ssh dev@203.0.113.42', be:'OpenStack', zone:'zone-a', fip:1, labels:{app:'ds-api', stage:'dev'},
     exp:'23일', net:'dev-sandbox-net · 10.64.3.0/24', flavor:'std.m — m1.medium', iid:'8f2c1d04-…-a91b',
     runtime:[['Go','1.23.4'],['Docker','27.3.1'],['Git','2.47.0']],
@@ -1869,7 +1879,7 @@ const ENVS = [
     usage:{cpu:[22,31,28,44,38,52,34],mem:[58,59,61,60,62,61,61],disk:42},
     log:'[09-14 11:20:04] cloud-init finished\n[09-14 11:20:11] go1.23.4 installed to /usr/local/go\n[09-14 11:20:33] docker engine active\n[09-14 11:20:39] init-script go-dev-bootstrap ok (6.2s)\n[09-18 03:00:00] auto-stop check — active session, skipped' },
 
-  { id:'team-k8s', tpl:'쿠버네티스', tv:'2.0', state:'running', cpu:12, mem:24, disk:200,
+  { id:'team-k8s', tpl:'쿠버네티스', tv:'2.0', state:'running', cpu:12, mem:24, disk:200, owner:'sh',
     access:'api.team-k8s.acme.internal', pubip:'203.0.113.51', be:'OpenStack', zone:'zone-a', exp:'—', prot:true, fip:1,
     net:'team-k8s-net · 10.64.4.0/24', flavor:'std.l — m1.large', iid:'1b77ae52-…-33c0',
     nodes:[
@@ -1880,54 +1890,90 @@ const ENVS = [
     usage:{cpu:[41,48,52,61,58,63,57],mem:[70,72,71,75,78,76,74],disk:38},
     log:'[09-07 09:12:00] cluster bootstrap ok\n[09-19 09:18:02] scaling worker pool 2 → 3\n[09-19 09:19:50] kubelet join in progress' },
 
-  { id:'ci-runner', tpl:'CI/CD', tv:'1.2', state:'running', cpu:4, mem:8, disk:60,
+  { id:'ci-runner', tpl:'CI/CD', tv:'1.2', state:'running', cpu:4, mem:8, disk:60, owner:'sh',
     access:'runner.acme.internal', pubip:'203.0.113.60', be:'OpenStack', zone:'zone-a', exp:'3일', expWarn:true, fip:1, labels:{app:'ds-api', stage:'ci'},
     net:'ci-runner-net · 10.64.5.0/24', flavor:'std.m — m1.medium', iid:'93ba21c7-…-01de',
     runtime:[['GitLab Runner','17.4'],['Docker','27.3.1']],
     usage:{cpu:[12,9,64,71,18,11,15],mem:[30,28,55,58,33,31,30],disk:66},
     log:'[09-18 14:02:11] runner registered (2 executors)\n[09-19 07:44:00] job #4821 succeeded' },
 
-  { id:'api-dev', tpl:'개발 VM', tv:'1.4', state:'creating', cpu:4, mem:8, disk:50,
+  { id:'api-dev', tpl:'개발 VM', tv:'1.4', state:'creating', cpu:4, mem:8, disk:50, owner:'sh',
     access:'—', be:'CloudStack', zone:'zone-b', exp:'30일', fip:0,
     progress:{step:4, total:6, label:'패키지 설치 — cloud-init 실행 중', pct:58},
     net:'api-dev-tier · 10.80.2.0/24', flavor:'std.m — Medium Instance', iid:'—' },
 
-  { id:'data-etl', tpl:'배치 워커', tv:'1.0', state:'stopped', cpu:8, mem:32, disk:200,
+  { id:'data-etl', tpl:'배치 워커', tv:'1.0', state:'stopped', cpu:8, mem:32, disk:200, owner:'dkim',
     access:'—', be:'CloudStack', zone:'zone-b', exp:'—', reclaim:'12일째 정지',
     net:'data-etl-tier · 10.80.1.0/24', flavor:'mem.l — Large Instance', iid:'c40e9f1a-…-7d2e',
     runtime:[['Docker','27.3.1'],['Python','3.12.6']],
     usage:{cpu:[0,0,0,0,0,0,0],mem:[0,0,0,0,0,0,0],disk:71},
     log:'[09-07 12:40:00] nightly batch finished\n[09-07 12:41:10] environment stopped by dkim' },
 
-  { id:'pg-staging', tpl:'데이터베이스', tv:'1.3', state:'stopped', cpu:2, mem:8, disk:100,
+  { id:'pg-staging', tpl:'데이터베이스', tv:'1.3', state:'stopped', cpu:2, mem:8, disk:100, owner:'jlee',
     access:'pg-staging.env.acme.internal', be:'OpenStack', zone:'zone-a', exp:'41일', labels:{app:'ds-api', stage:'staging'},
     net:'pg-staging-net · 10.64.6.0/24', flavor:'std.s — m1.small', iid:'44c0e9b1-…-b7a2',
     creds:true, runtime:[['PostgreSQL','16.4']],
     usage:{cpu:[0,0,0,0,0,0,0],mem:[0,0,0,0,0,0,0],disk:24},
     log:'[09-16 14:22:40] postgres initdb ok\n[09-16 16:41:00] auto-stop (idle 2h)' },
 
-  { id:'old-ci', tpl:'CI/CD', tv:'1.2', state:'failed', cpu:2, mem:4, disk:40,
+  { id:'old-ci', tpl:'CI/CD', tv:'1.2', state:'failed', cpu:2, mem:4, disk:40, owner:'dkim',
     access:'—', be:'OpenStack', zone:'zone-a', exp:'—', fail:'3/6 인스턴스 생성 실패 · 고아 2건',
     net:'net-old-ci · 10.64.7.0/24', flavor:'std.s — m1.small', iid:'i-7c21…' }
 ];
 
-const QMAX = {cpu:40, mem:160, disk:1024, ip:4, img:5, imgGB:50};
+// 스냅샷은 디스크 쿼터를 점유함 (quotaNow의 snapDisk)
+const SNAPSHOTS = [
+  {n:'data-etl-0919',    src:'data-etl',    gb:200, zone:'zone-b', owner:'dkim', at:'09-19 07:12', keep:'90일', left:90},
+  {n:'pg-staging-0912',  src:'pg-staging',  gb:40,  zone:'zone-a', owner:'jlee', at:'09-12 18:40', keep:'30일', left:23},
+  {n:'dev-sandbox-0901', src:'dev-sandbox', gb:20,  zone:'zone-a', owner:'sh',   at:'09-01 11:02', keep:'2일',  left:2}
+];
+
+const QMAX = {cpu:40, mem:160, disk:1536, ip:4, img:5, imgGB:50};
 const QMAX_SMALL = {...QMAX};
 const QMAX_LARGE = {cpu:600, mem:1600, disk:9216, ip:64, img:40, imgGB:400};
 const SYSTEM = {cpu:1, mem:1, disk:8};        // 프로젝트 VPC 라우터
 const ORPHAN = {cpu:2, mem:4, disk:40};       // old-ci 생성 실패 잔여
-const IMAGES = {count:3, gb:42};
+const IMAGES = {count:3, gb:42};              // 개수·용량 쿼터로만 관리, 디스크 쿼터와는 분리
 
 function quotaNow(){
   const live = ENVS.filter(e => e.state !== 'failed');
   const sum = k => live.reduce((a,e) => a + (e[k]||0), 0);
+  const envDisk = sum('disk');
+  const volDisk = EXTRA_VOLUMES.reduce((a,v) => a + v.gb, 0);
+  const snapDisk = SNAPSHOTS.reduce((a,s) => a + s.gb, 0);
+  const sysDisk = SYSTEM.disk, orphanDisk = ORPHAN.disk;
   return {
     cpu:  sum('cpu')  + SYSTEM.cpu  + ORPHAN.cpu,
     mem:  sum('mem')  + SYSTEM.mem  + ORPHAN.mem,
-    disk: sum('disk') + SYSTEM.disk + ORPHAN.disk + IMAGES.gb,
-    ip:   live.filter(e => e.fip).length,
-    img:  IMAGES.count, imgGB: IMAGES.gb
+    disk: envDisk + volDisk + snapDisk + sysDisk + orphanDisk,
+    ip:   live.filter(e => e.fip).length + EXTRA_IPS.length,
+    img:  IMAGES.count, imgGB: IMAGES.gb,
+    parts: {envDisk, volDisk, snapDisk, sysDisk, orphanDisk}
   };
+}
+// 회수 대상의 유일한 출처 — 개요/쿼터/환경 필터/알림이 모두 이 함수를 사용
+function reclaimList(){
+  const out = [];
+  ENVS.forEach(e => {
+    if(e.state === 'failed') return;
+    if(e.reclaim) out.push({kind:'env', name:e.id, reason:e.reclaim, cpu:e.cpu, mem:e.mem, disk:e.disk, actions:['snap-delete','delete']});
+    else if(e.expWarn) out.push({kind:'env', name:e.id, reason:e.exp+' 후 만료', cpu:e.cpu, mem:e.mem, disk:e.disk, actions:['extend','delete']});
+  });
+  const orphanEnv = ENVS.find(e => e.state === 'failed');
+  if(orphanEnv) out.push({kind:'orphan', name:orphanEnv.id, reason:orphanEnv.fail, cpu:ORPHAN.cpu, mem:ORPHAN.mem, disk:ORPHAN.disk, actions:['job','reclaim-orphan']});
+  EXTRA_VOLUMES.filter(v => v.orphan).forEach(v => {
+    out.push({kind:'volume', name:v.n, reason:'연결되지 않은 볼륨', cpu:0, mem:0, disk:v.gb, actions:['reclaim-volume']});
+  });
+  return out;
+}
+// 7일 이내 자동 반납될 예정인 쿼터
+function upcomingReturns(){
+  const out = [];
+  const ciRunner = ENVS.find(e => e.id === 'ci-runner');
+  if(ciRunner && ciRunner.expWarn) out.push({kind:'env', name:'ci-runner', days:3, cpu:ciRunner.cpu, mem:ciRunner.mem, disk:ciRunner.disk});
+  const snap = SNAPSHOTS.find(s => s.n === 'dev-sandbox-0901');
+  if(snap) out.push({kind:'snapshot', name:snap.n, days:snap.left, cpu:0, mem:0, disk:snap.gb});
+  return out;
 }
 function quotaRows(){
   const u = quotaNow();
@@ -2038,19 +2084,35 @@ function spec(e){ return `${e.cpu} vCPU · ${e.mem}GB · ${e.disk}GB`; }
 /* ---------- quota ---------- */
 function renderQuota(id){
   const el = document.getElementById(id); if(!el) return;
+  const full = id === 'qFull';
   el.innerHTML = quotaRows().map(q => {
     const p = q.u / q.m, over = p > 1, hot = p >= .8;
-    return `<div class="qrow"><span class="lb">${q.k}</span>
+    const row = `<div class="qrow" ${full && q.k==='디스크' ? 'style="cursor:pointer" onclick="toggleDiskDetail()"' : ''}><span class="lb">${q.k}</span>
       <span class="bar"><i class="${hot?'hot':''}" style="width:${Math.min(100,p*100).toFixed(1)}%"></i></span>
       <span class="vl" ${over?'style="color:var(--warn)"':''}>${fmt(q.u)}${q.unit} <em>/ ${fmt(q.m)}${q.unit}</em></span>
       <span class="pc" ${over?'style="color:var(--warn)"':''}>${over?'초과':Math.round(p*100)+'%'}</span></div>`;
+    if(full && q.k==='디스크'){
+      const p2 = quotaNow().parts;
+      return row + `<div id="diskDetail" style="display:none;padding:0 0 10px 110px;font-size:12.5px;color:var(--text-2);gap:16px;flex-wrap:wrap">
+        <span>환경 <b class="mono" style="color:var(--text)">${fmt(p2.envDisk)}</b></span>
+        <span>볼륨 <b class="mono" style="color:var(--text)">${fmt(p2.volDisk)}</b></span>
+        <span>스냅샷 <b class="mono" style="color:var(--text)">${fmt(p2.snapDisk)}</b></span>
+        <span>시스템 <b class="mono" style="color:var(--text)">${fmt(p2.sysDisk)}</b></span>
+        <span>고아 <b class="mono" style="color:var(--text)">${fmt(p2.orphanDisk)}</b></span></div>`;
+    }
+    return row;
   }).join('');
+  if(full){
+    const foot = document.getElementById('qFullFoot');
+    if(foot) foot.textContent = '시스템 VM 1대(프로젝트 VPC 라우터)와 고아 리소스 2건, 스냅샷과 분리된 볼륨이 포함된 값입니다.';
+  }
 }
+function toggleDiskDetail(){ const el = document.getElementById('diskDetail'); if(el) el.style.display = (el.style.display==='none') ? 'flex' : 'none'; }
 function renderStats(){
   const el = document.getElementById('ovStats'); if(!el) return;
   const c = st => ENVS.filter(e => e.state === st).length;
   const busy = ENVS.filter(e => ['creating','starting','stopping','deleting','restarting'].includes(e.state)).length;
-  const reclaim = ENVS.filter(e => e.reclaim || e.expWarn).length;
+  const reclaim = reclaimList().filter(r => r.kind==='env').length;
   const fail = ENVS.filter(e => e.state === 'failed').length;
   const u = quotaNow();
   const pct = Math.round(Math.max(u.cpu/QMAX.cpu, u.mem/QMAX.mem, u.disk/QMAX.disk) * 100);
@@ -2065,6 +2127,222 @@ function renderStats(){
       <div class="d${fail?' e':''}">${fail ? 'old-ci · 고아 2건' : '없음'}</div></div>`;
 }
 function renderAllQuota(){ renderQuota('qOverview'); renderQuota('qFull'); renderSideQuota(); renderStats(); }
+/* ---------- 회수 대상 / 쿼터 페이지 ---------- */
+function reclaimActionBtns(r){
+  if(r.kind==='env'){
+    const a = [];
+    if(r.actions.includes('snap-delete')) a.push(`<button class="btn btn-sm rw" onclick="dlg('snapThenDelete',{id:'${r.name}'})">스냅샷 후 삭제</button>`);
+    if(r.actions.includes('extend')) a.push(`<button class="btn btn-sm rw" onclick="dlg('extend',{id:'${r.name}'})">연장</button>`);
+    a.push(`<button class="btn btn-sm btn-warn rw" onclick="openDel('${r.name}')">삭제</button>`);
+    return a.join(' ');
+  }
+  if(r.kind==='orphan') return `<button class="btn btn-sm rw" onclick="go('job-failed')">작업 상세</button> <button class="btn btn-sm btn-warn rw" onclick="reclaimOrphan()">회수</button>`;
+  if(r.kind==='volume') return `<button class="btn btn-sm btn-warn rw" onclick="reclaimVolume('${r.name}')">회수</button>`;
+  return '';
+}
+function renderReclaim(){
+  const rows = document.getElementById('qReclaimRows');
+  const sub = document.getElementById('qReclaimSub');
+  if(!rows) return;
+  const list = reclaimList();
+  const totalCpu = list.reduce((a,r)=>a+r.cpu,0), totalMem = list.reduce((a,r)=>a+r.mem,0), totalDisk = list.reduce((a,r)=>a+r.disk,0);
+  if(sub) sub.textContent = list.length ? `${list.length}건 · 모두 정리하면 vCPU ${totalCpu} · 메모리 ${totalMem}GB · 디스크 ${totalDisk}GB 확보` : '0건';
+  rows.innerHTML = list.length ? list.map(r => `<tr><td class="name">${r.kind==='orphan' ? '고아 리소스 2건' : r.name}</td>
+    <td><span class="st ${r.kind==='orphan'?'err':'warn'}">${esc(r.reason)}</span></td>
+    <td class="dim mono">${r.cpu} vCPU · ${r.mem}GB · ${r.disk}GB</td>
+    <td class="act">${reclaimActionBtns(r)}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="faint" style="text-align:center;padding:24px">회수 대상이 없습니다</td></tr>';
+}
+function renderUpcoming(){
+  const rows = document.getElementById('qUpcomingRows');
+  const sub = document.getElementById('qUpcomingSub');
+  if(!rows) return;
+  const list = upcomingReturns();
+  const totalCpu = list.reduce((a,r)=>a+r.cpu,0), totalMem = list.reduce((a,r)=>a+r.mem,0), totalDisk = list.reduce((a,r)=>a+r.disk,0);
+  if(sub) sub.textContent = list.length ? `7일 이내 · vCPU ${totalCpu} · 메모리 ${totalMem}GB · 디스크 ${totalDisk}GB` : '7일 이내 반납 예정 없음';
+  rows.innerHTML = list.length ? list.map(r => `<tr><td class="name">${r.name}${r.kind==='snapshot'?' <span class="chip">스냅샷</span>':''}</td>
+    <td class="mono" style="color:var(--warn)">${r.days}일</td><td class="num">${r.cpu||'—'}</td><td class="num">${r.mem?r.mem+' GB':'—'}</td><td class="num">${r.disk} GB</td></tr>`).join('')
+    : '<tr><td colspan="5" class="faint" style="text-align:center;padding:24px">없음</td></tr>';
+}
+function renderMemberAlloc(){
+  const rows = document.getElementById('qMemberRows');
+  const foot = document.getElementById('qMemberFoot');
+  if(!rows) return;
+  rows.innerHTML = MEMBERS.map(m => {
+    const envs = ENVS.filter(e => e.owner === m.name);
+    const cpu = envs.reduce((a,e)=>a+e.cpu,0);
+    return `<tr><td class="name">${m.name}</td><td class="num">${envs.length}</td><td class="num">${cpu}</td></tr>`;
+  }).join('');
+  if(foot){
+    const total = MEMBERS.reduce((a,m) => a + ENVS.filter(e => e.owner===m.name).reduce((b,e) => b+e.cpu, 0), 0) + SYSTEM.cpu;
+    foot.textContent = `시스템 VM ${SYSTEM.cpu} vCPU 별도, 합계 ${total}`;
+  }
+}
+const QUOTA_REQUESTS = [];
+function renderQuotaRequests(){
+  const rows = document.getElementById('qRequestRows');
+  const foot = document.getElementById('qRequestFoot');
+  if(!rows) return;
+  rows.innerHTML = QUOTA_REQUESTS.map(r => `<tr><td class="name">${r.item}</td><td class="mono">+${r.amount}${r.unit}</td>
+    <td class="dim">${r.period}</td><td class="dim">${esc(r.reason)||'—'}</td><td><span class="st warn">검토 중</span></td></tr>`).join('');
+  if(foot) foot.style.display = QUOTA_REQUESTS.length ? 'none' : '';
+}
+function renderQuotaPage(){ renderReclaim(); renderUpcoming(); renderMemberAlloc(); renderQuotaRequests(); }
+function renderSnapshots(){
+  const head = document.getElementById('snapHead');
+  if(head){ const gb = SNAPSHOTS.reduce((a,s)=>a+s.gb,0); head.textContent = `${SNAPSHOTS.length}개 · 디스크 쿼터 ${fmt(gb)}GB 점유`; }
+  const tbody = document.getElementById('snapRows');
+  if(!tbody) return;
+  tbody.innerHTML = SNAPSHOTS.length ? SNAPSHOTS.map(s => `<tr><td class="name">${s.n}${s.left<=3?' <span class="chip w">만료 임박</span>':''}</td>
+    <td class="mono dim">${s.src}</td><td class="num">${s.gb} GB</td><td class="dim mono">${zlabel(s.zone)}</td><td class="dim">${s.owner}</td>
+    <td class="dim mono">${s.at}</td><td class="${s.left<=3?'mono':'dim mono'}" ${s.left<=3?'style="color:var(--warn)"':''}>${s.keep}</td>
+    <td class="act"><button class="btn btn-sm rw" onclick="openRestore()">복원</button> <button class="btn btn-sm btn-quiet rw" onclick="dlg('snapDelete',{name:'${s.n}'})"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>`).join('')
+    : '<tr><td colspan="8" class="faint" style="text-align:center;padding:24px">스냅샷이 없습니다</td></tr>';
+}
+function renderProjectPickerQuota(){
+  const el = document.getElementById('mProjList'); if(!el) return;
+  const u = quotaNow();
+  const proj = [
+    {n:'platform', checked:true, p: u.cpu/QMAX.cpu},
+    {n:'infra', checked:false, p: 9/16},
+    {n:'team-web', checked:false, p: 60/64}
+  ];
+  el.innerHTML = proj.map(p => `<button aria-checked="${p.checked}" onclick="closeMenus();${p.checked?'':`toast('${p.n}으로 전환했습니다')`}" style="flex-direction:column;align-items:stretch;gap:4px">
+    <span style="display:flex;justify-content:space-between;width:100%">${p.n}<span class="mono faint" style="font-size:11px">${Math.round(p.p*100)}%</span></span>
+    <span class="bar thin"><i class="${p.p>=.8?'hot':''}" style="width:${Math.min(100,p.p*100).toFixed(1)}%"></i></span></button>`).join('');
+}
+function renderImageQuota(){
+  const el = document.getElementById('imgQuota'); if(!el) return;
+  const cp = IMAGES.count/QMAX.img, gp = IMAGES.gb/QMAX.imgGB;
+  el.innerHTML = `
+    <div class="qrow"><span class="lb">커스텀 이미지</span><span class="bar"><i class="${cp>=.8?'hot':''}" style="width:${Math.min(100,cp*100).toFixed(1)}%"></i></span><span class="vl">${IMAGES.count} <em>/ ${QMAX.img} 개</em></span><span class="pc">${Math.round(cp*100)}%</span></div>
+    <div class="qrow"><span class="lb">이미지 용량</span><span class="bar"><i class="${gp>=.8?'hot':''}" style="width:${Math.min(100,gp*100).toFixed(1)}%"></i></span><span class="vl">${IMAGES.gb} <em>/ ${QMAX.imgGB} GB</em></span><span class="pc">${Math.round(gp*100)}%</span></div>`;
+}
+/* 회수 대상: 원본 리소스를 실제로 제거해 쿼터 막대가 즉시 줄어들게 함 */
+function reclaimOrphan(){
+  ORPHAN.cpu = 0; ORPHAN.mem = 0; ORPHAN.disk = 0;
+  const i = ENVS.findIndex(e => e.state === 'failed');
+  if(i > -1) ENVS.splice(i, 1);
+  refreshAll(); toast('고아 리소스를 회수했습니다');
+}
+function reclaimVolume(n){
+  const i = EXTRA_VOLUMES.findIndex(v => v.n === n);
+  if(i > -1) EXTRA_VOLUMES.splice(i, 1);
+  refreshAll(); toast(`${n} 을(를) 회수했습니다`);
+}
+function resolveVolumeTarget(n){
+  const ev = EXTRA_VOLUMES.find(v => v.n === n);
+  if(ev) return {type:'extra', gb:ev.gb, ref:ev};
+  if(n && n.endsWith('-root')){
+    const base = n.slice(0, -5).replace(/-0$/, '');
+    const e = ENVS.find(x => !x.nodes && x.id === base);
+    if(e) return {type:'env', gb:e.disk, ref:e};
+  }
+  return {type:'unknown', gb:50, ref:null};
+}
+function doNewVolume(){
+  const nameEl = document.getElementById('nvName'), sizeEl = document.getElementById('nvSize');
+  const name = (nameEl && nameEl.value.trim()) || ('vol-' + Math.random().toString(16).slice(2,6));
+  const gb = +((sizeEl && sizeEl.value) || '100').replace(/\D/g,'') || 100;
+  EXTRA_VOLUMES.push({n:name, gb, kind:'데이터', att:null, env:null, be:'kr-a'});
+  dlgClose(); refreshAll(); go('volumes');
+  toast('볼륨을 만들었습니다');
+}
+function doExpandVol(n){
+  const sizeEl = document.getElementById('evSize');
+  const newGb = +((sizeEl && sizeEl.value) || '0').replace(/\D/g,'') || 0;
+  const t = resolveVolumeTarget(n);
+  if(t.type === 'extra') t.ref.gb = Math.max(t.ref.gb, newGb);
+  else if(t.type === 'env') t.ref.disk = Math.max(t.ref.disk, newGb);
+  dlgClose(); refreshAll();
+  toast(`${n} 을(를) 확장했습니다`);
+}
+function doAllocIP(){
+  const ip = '203.0.113.' + (80 + EXTRA_IPS.length);
+  EXTRA_IPS.push(ip);
+  dlgClose(); refreshAll(); go('network');
+  toast('공인 IP를 할당했습니다');
+}
+function doReleaseIP(ip){
+  const e = ENVS.find(x => x.pubip === ip);
+  if(e) e.fip = 0;
+  else { const i = EXTRA_IPS.indexOf(ip); if(i > -1) EXTRA_IPS.splice(i,1); }
+  dlgClose(); refreshAll();
+  toast('공인 IP를 해제했습니다');
+}
+function doSnapCreate(id){
+  const e = ENVS.find(x => x.id === id);
+  const disk = e ? e.disk : 50;
+  const nameEl = document.getElementById('snapName');
+  const keepBtn = document.querySelector('#snapKeep .opt[aria-pressed="true"]');
+  const name = (nameEl && nameEl.value.trim()) || (id + '-snap');
+  const keep = keepBtn ? keepBtn.dataset.keep : '90일';
+  const keepDays = keep==='30일' ? 30 : keep==='90일' ? 90 : 365;
+  SNAPSHOTS.unshift({n:name, src:id, gb:disk, zone:e?e.zone:'zone-a', owner:e?e.owner:'sh', at:'09-24 00:00', keep, left:keepDays});
+  dlgClose(); refreshAll(); go('snapshots');
+  toast('스냅샷을 만들었습니다');
+}
+function toggleStdImpact(){
+  const mode = (document.querySelector('#stdMode .opt[aria-pressed="true"]') || {}).dataset.mode;
+  const k = document.getElementById('stdImpactKeep'), n = document.getElementById('stdImpactNew');
+  if(k) k.hidden = mode !== 'keep';
+  if(n) n.hidden = mode !== 'new';
+}
+function doSnapThenDelete(id){
+  const e = ENVS.find(x => x.id === id); if(!e) return;
+  const modeBtn = document.querySelector('#stdMode .opt[aria-pressed="true"]');
+  const mode = modeBtn ? modeBtn.dataset.mode : 'new';
+  dlgClose();
+  if(mode === 'new'){
+    SNAPSHOTS.unshift({n:id+'-0924', src:id, gb:e.disk, zone:e.zone, owner:e.owner, at:'09-24 00:00', keep:'90일', left:90});
+    refreshAll();
+  }
+  transition(id, 'deleting', 2400);
+}
+function doSnapDelete(name){
+  const i = SNAPSHOTS.findIndex(s => s.n === name);
+  if(i > -1) SNAPSHOTS.splice(i, 1);
+  dlgClose(); refreshAll();
+  toast(`${name} 을(를) 삭제했습니다`);
+}
+function submitExtend(id){
+  const e = ENVS.find(x => x.id === id);
+  const btn = document.querySelector('#extPeriod .opt[aria-pressed="true"]');
+  const days = btn ? +btn.dataset.days : 30;
+  if(e){ delete e.expWarn; e.exp = days + '일'; }
+  dlgClose(); refreshAll();
+  toast(`${id} 을(를) ${days}일 연장했습니다`);
+}
+function submitQuotaRequest(){
+  const itemBtn = document.querySelector('#qrItem .opt[aria-pressed="true"]');
+  const periodBtn = document.querySelector('#qrPeriod .opt[aria-pressed="true"]');
+  const amountEl = document.getElementById('qrAmount');
+  const amount = +(((amountEl && amountEl.value) || '').replace(/\D/g,'')) || 0;
+  const reasonEl = document.getElementById('qrReason');
+  const reason = reasonEl ? reasonEl.value.trim() : '';
+  if(!amount){ toast('필요한 양을 입력하세요'); return; }
+  const item = itemBtn ? itemBtn.textContent.trim() : 'vCPU';
+  const unit = itemBtn ? itemBtn.dataset.unit : '';
+  const period = periodBtn ? periodBtn.childNodes[0].textContent.trim() : '영구';
+  QUOTA_REQUESTS.unshift({item, amount, unit, period, reason});
+  dlgClose(); renderQuotaRequests(); go('quota');
+  toast('쿼터 상향 요청을 제출했습니다 — 검토 중');
+}
+/* ---------- quotaImpact: {cpu,mem,disk,ip} 변화량을 공통 UI로 표시 ---------- */
+function quotaImpact(delta){
+  const u = quotaNow();
+  const defs = [['vCPU','cpu',QMAX.cpu,''],['메모리','mem',QMAX.mem,'GB'],['디스크','disk',QMAX.disk,'GB'],['공인 IP','ip',QMAX.ip,'']];
+  let over = false;
+  const rows = defs.filter(([,k]) => delta[k] !== undefined && delta[k] !== 0).map(([label,k,max,unit]) => {
+    const now = u[k], next = now + delta[k], bad = next > max;
+    if(bad) over = true;
+    const sign = delta[k] > 0 ? '+' : '';
+    return `<div class="qrow" style="grid-template-columns:80px minmax(0,1fr) 190px"><span class="lb">${label}</span>
+      <span class="bar"><i class="${bad?'hot':''}" style="width:${Math.min(100,next/max*100).toFixed(1)}%"></i></span>
+      <span class="vl" ${bad?'style="color:var(--warn)"':''}>${fmt(now)} → <b>${fmt(next)}</b>${unit} <em>(${sign}${delta[k]}${unit} / ${fmt(max)}${unit})</em></span></div>`;
+  }).join('');
+  return {html: rows || '<p class="hint">변화 없음</p>', over};
+}
 function renderSideQuota(){
   const u = quotaNow();
   const rows = [['vCPU', u.cpu, QMAX.cpu, ''], ['메모리', u.mem, QMAX.mem, '']];
@@ -2075,7 +2353,19 @@ function renderSideQuota(){
       <div class="bar"><i class="${p>=.8?'hot':''}" style="width:${Math.min(100,p*100).toFixed(1)}%"></i></div>`;
   }).join('<div style="height:8px"></div>');
   const nav = document.querySelector('[data-nav="quota"] .cnt');
-  if(nav) nav.textContent = Math.round(Math.max(u.cpu/QMAX.cpu, u.mem/QMAX.mem, u.disk/QMAX.disk)*100) + '%';
+  const pct = Math.round(Math.max(u.cpu/QMAX.cpu, u.mem/QMAX.mem, u.disk/QMAX.disk)*100);
+  if(nav) nav.textContent = pct + '%';
+  const cpuPct = Math.round(u.cpu/QMAX.cpu*100);
+  const n1 = document.getElementById('notifQuotaPct');
+  if(n1) n1.textContent = `vCPU 쿼터가 80%를 넘었습니다 (현재 ${cpuPct}%).`;
+  const n2 = document.getElementById('notifCenterQuotaPct');
+  if(n2) n2.textContent = `vCPU 사용률이 80%를 넘었습니다 (현재 ${cpuPct}%).`;
+  const mp = document.getElementById('myProjQuota');
+  if(mp) mp.textContent = `${fmt(u.cpu)} / ${fmt(QMAX.cpu)} vCPU`;
+  const apc = document.getElementById('adminProjCpu');
+  if(apc) apc.textContent = `${fmt(u.cpu)} / ${fmt(QMAX.cpu)}`;
+  const apd = document.getElementById('adminProjDisk');
+  if(apd) apd.textContent = `${fmt(u.disk)} / ${fmt(QMAX.disk)}`;
 }
 
 /* ---------- 상태 전이 ---------- */
@@ -2085,6 +2375,7 @@ function announce(msg){
 }
 function refreshAll(){
   renderEnvList(); renderAllQuota(); renderInstances(); renderVolumes(); renderNetwork();
+  renderTeamMembers(); renderSnapshots(); renderImageQuota(); renderQuotaPage(); renderProjectPickerQuota();
   const busy = ENVS.filter(e => ['creating','starting','stopping','deleting','restarting'].includes(e.state)).length;
   document.body.dataset.busy = busy > 0 && busy <= 3 ? 'few' : 'many';
   const d = document.querySelector('[data-view="env-detail"]');
@@ -2166,6 +2457,7 @@ const EXTRA_VOLUMES = [
   {n:'vol-scratch',   gb:200, kind:'데이터', att:null, env:null, be:'kr-a', orphan:true},
   {n:'backup-01',     gb:50,  kind:'데이터', att:null, env:null, be:'kr-a'}
 ];
+const EXTRA_IPS = []; // 인스턴스에 연결되지 않은 채로 할당된 공인 IP (쿼터는 계속 점유)
 function instances(){
   const out = [];
   ENVS.filter(e => e.state !== 'failed').forEach(e => {
@@ -2428,7 +2720,8 @@ function networks(){
 }
 function publicIPs(){
   return ENVS.filter(e => e.state !== 'failed' && e.fip)
-    .map(e => ({ ip:e.pubip, att:(e.nodes ? e.nodes[0].n : e.id + '-0'), env:e.id }));
+    .map(e => ({ ip:e.pubip, att:(e.nodes ? e.nodes[0].n : e.id + '-0'), env:e.id }))
+    .concat(EXTRA_IPS.map(ip => ({ ip, att:'—', env:'—' })));
 }
 function securityGroups(){
   const per = ENVS.filter(e => e.state !== 'failed').map(e => ({
@@ -2505,7 +2798,7 @@ function sortEnv(k){
 function renderEnvFilters(){
   const c = k => ENVS.filter(e => { const s0 = envFilter; envFilter = k; const r = matchF(e); envFilter = s0; return r; }).length;
   const defs = [['all','전체',ENVS.length],['running','실행 중',c('running')],['stopped','정지됨',c('stopped')],
-                ['busy','진행 중',c('busy')],['failed','오류',c('failed')],['reclaim','회수 대상',c('reclaim')]];
+                ['busy','진행 중',c('busy')],['failed','오류',c('failed')],['reclaim','회수 대상 환경',c('reclaim')]];
   const el = document.getElementById('envFilters'); if(!el) return;
   el.innerHTML = defs.map(([k,l,n]) =>
     `<button class="filter" aria-pressed="${k===envFilter}" data-f="${k}" onclick="filterEnv(this)">${l} ${n}</button>`).join('');
@@ -2544,7 +2837,7 @@ function renderEnvList(){
         <td data-label="사양" class="dim mono">${spec(e)}</td>
         <td data-label="접속" class="${e.access==='—'?'faint':'mono'}">${e.access}</td>
         <td data-label="존" class="dim mono">${zlabel(e.zone)}</td>
-        <td data-label="만료" class="${e.expWarn?'mono':'dim mono'}" ${e.expWarn?'style="color:var(--warn)"':''}>${e.exp}</td>
+        <td data-label="만료" class="${e.expWarn?'mono':'dim mono'}" ${e.expWarn?'style="color:var(--warn)"':''}>${e.exp}${e.expWarn?` · vCPU ${e.cpu} 반납 예정`:''}</td>
         <td class="act">${rowActions(e)}</td>
       </tr>`).join('');
   }
@@ -2663,7 +2956,9 @@ function renderDetail(){
   $('#dCrumb').textContent = e.id;
   $('#dName').textContent = e.id;
   $('#dState').innerHTML = stTag(e);
-  $('#dSub').textContent = `${e.tpl} v${e.tv} · ${zlabel(e.zone)}`;
+  const snaps = SNAPSHOTS.filter(s => s.src === e.id);
+  const snapNote = snaps.length ? ` <button type="button" onclick="go('snapshots')" style="background:none;border:none;padding:0;color:var(--sel);cursor:pointer;font:inherit">(+스냅샷 ${snaps.reduce((a,s)=>a+s.gb,0)}GB)</button>` : '';
+  $('#dSub').innerHTML = `${e.tpl} v${e.tv} · ${zlabel(e.zone)} · 점유 vCPU ${e.cpu} · 메모리 ${e.mem}GB · 디스크 ${e.disk}GB${snapNote}`;
 
   $('#dActions').innerHTML =
     e.state==='running' ? `<button class="btn" onclick="dlg('terminal',{id:'${e.id}'})"><svg class="ic ic-sm"><use href="#i-term"/></svg>터미널</button><button class="btn rw" onclick="dlg('stopEnv',{id:'${e.id}'})">정지</button><button class="btn btn-quiet" onclick="menuAt(event,'${e.id}')"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button>` :
@@ -2681,8 +2976,8 @@ function renderDetail(){
       <div style="margin-top:9px;display:flex;gap:6px"><button class="btn btn-sm rw" onclick="go('job-failed')">작업 상세</button>
       <button class="btn btn-sm btn-warn rw" onclick="dlg('rollbackJob')">롤백</button></div></div></div>`;
   if(e.reclaim) banner = `<div class="banner sec"><svg class="ic"><use href="#i-warn"/></svg>
-    <div><b>회수 대상</b> — ${esc(e.reclaim)}. 디스크는 정지 상태에서도 반납되지 않습니다.
-      <div style="margin-top:9px;display:flex;gap:6px"><button class="btn btn-sm rw" onclick="dlg('snapCreate',{id:'${e.id}'})">스냅샷 후 삭제</button>
+    <div><b>회수 대상</b> — ${esc(e.reclaim)}. 정지 상태에서도 vCPU·메모리·디스크 쿼터를 그대로 점유합니다.
+      <div style="margin-top:9px;display:flex;gap:6px"><button class="btn btn-sm rw" onclick="dlg('snapThenDelete',{id:'${e.id}'})">스냅샷 후 삭제</button>
       <button class="btn btn-sm btn-warn rw" onclick="openDel('${e.id}')">삭제</button></div></div></div>`;
   if(e.expWarn) banner = `<div class="banner sec"><svg class="ic"><use href="#i-warn"/></svg>
     <div><b>3일 후 만료</b>됩니다. 연장하지 않으면 자동 회수됩니다.
@@ -3145,7 +3440,28 @@ function sendInvite(){
 }
 // 기능 추가: 팀 페이지에 "대기 중" 초대 상태 표시 (재전송/취소 포함)
 let pendingInvites = [];
+const MEMBERS = [
+  {name:'sh', role:'관리자', last:'방금'},
+  {name:'jlee', role:'멤버', last:'2시간 전'},
+  {name:'dkim', role:'멤버', last:'어제'},
+  {name:'ypark', role:'읽기 전용', last:'3일 전'}
+];
+function renderTeamMembers(){
+  const tbody = document.getElementById('teamRows');
+  if(!tbody) return;
+  tbody.querySelectorAll('tr:not([data-pending])').forEach(r => r.remove());
+  const rows = MEMBERS.map(m => {
+    const envs = ENVS.filter(e => e.owner === m.name);
+    const cpu = envs.reduce((a,e) => a + e.cpu, 0);
+    return `<tr><td class="name">${m.name}</td><td class="dim">${m.role}</td><td class="num">${envs.length}</td><td class="num">${cpu}</td><td class="dim mono">${m.last}</td><td class="act adminonly"><button class="btn btn-sm btn-quiet"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>`;
+  }).join('');
+  tbody.insertAdjacentHTML('afterbegin', rows);
+  const total = MEMBERS.reduce((a,m) => a + ENVS.filter(e => e.owner===m.name).reduce((b,e) => b+e.cpu, 0), 0) + SYSTEM.cpu;
+  const note = document.getElementById('teamCpuNote');
+  if(note) note.textContent = `시스템 VM ${SYSTEM.cpu} vCPU 별도, 합계 ${total}`;
+}
 function renderTeamPending(){
+  renderTeamMembers();
   const tbody = document.getElementById('teamRows');
   if(!tbody) return;
   tbody.querySelectorAll('tr[data-pending]').forEach(r => r.remove());
@@ -3306,6 +3622,7 @@ function wzStep(s){
       inp.value = base + '-' + i;
       inp.oninput = () => { inp.dataset.touched = '1'; renderWzPlan(); };
     }
+    renderWzWarnBanner();
   }
   $('#wzStepLbl').textContent = s + ' / 2';
   $('#wzNext').textContent = (s===1) ? '다음' : '생성';
@@ -3393,20 +3710,36 @@ function prot(on){
   h.textContent = on ? '보호 중 — 만료되지 않고 회수 대상에서 제외됩니다. 쿼터는 계속 점유합니다.'
                      : '만료일이 지나면 자동 회수됩니다.';
 }
+// 4-5: 마법사 진입 시 쿼터가 80% 이상이면 미리 경고
+function renderWzWarnBanner(){
+  const box = document.getElementById('wzWarnBanner'); if(!box) return;
+  const u = quotaNow();
+  const hot = u.cpu/QMAX.cpu >= .8 || u.mem/QMAX.mem >= .8 || u.disk/QMAX.disk >= .8;
+  if(!hot){ box.innerHTML = ''; return; }
+  const list = reclaimList();
+  const freeCpu = list.reduce((a,r)=>a+r.cpu,0);
+  box.innerHTML = fBan(`vCPU ${QMAX.cpu-u.cpu}개, 디스크 ${fmt(QMAX.disk-u.disk)}GB 남음 · 회수 대상 정리 시 vCPU ${freeCpu} 확보
+    <button class="btn btn-sm btn-quiet" style="margin-left:6px" onclick="closeWizard();go('quota')">쿼터 보기</button>`);
+}
 function delta(){
   const el = $('#delta');
   if(step!==2){ el.textContent=''; return; }
   const s = document.querySelector('#wz2 .opt[data-cpu][aria-pressed="true"]');
   const c = s ? +s.dataset.cpu : 0, m = s ? +s.dataset.mem : 0;
+  const dskEl = document.getElementById('dskv');
+  const d = dskEl ? +(dskEl.textContent.replace(/\D/g,'') || 50) : 50;
   const u = quotaNow();
-  const over = u.cpu + c > QMAX.cpu || u.mem + m > QMAX.mem;
-  el.innerHTML = `생성 후 vCPU <b>${u.cpu} → ${u.cpu+c}</b> / ${QMAX.cpu} · 메모리 <b>${u.mem} → ${u.mem+m}</b> / ${QMAX.mem} GB`
+  const over = u.cpu + c > QMAX.cpu || u.mem + m > QMAX.mem || u.disk + d > QMAX.disk;
+  const diskOver = u.disk + d > QMAX.disk;
+  el.innerHTML = `생성 후 vCPU <b>${u.cpu} → ${u.cpu+c}</b> / ${QMAX.cpu} · 메모리 <b>${u.mem} → ${u.mem+m}</b> / ${QMAX.mem} GB · 디스크 <b ${diskOver?'style="color:var(--warn)"':''}>${fmt(u.disk)} → ${fmt(u.disk+d)}</b> / ${fmt(QMAX.disk)} GB`
     + (over ? ' <span style="color:var(--warn)">— 쿼터 초과</span>' : '');
   $('#wzNext').disabled = over;
   const L = document.querySelector('#wz2 .opt[data-cpu="8"]');
   if(L) L.disabled = u.cpu + 8 > QMAX.cpu;
   const h = document.getElementById('wzQuotaHint');
   if(h) h.firstChild.textContent = `L은 남은 vCPU 쿼터(${QMAX.cpu-u.cpu})를 초과합니다. `;
+  const dh = document.getElementById('wzDiskHint');
+  if(dh) dh.hidden = !diskOver;
   renderWzPlan();
 }
 // 기능 추가: Terraform plan 스타일 — 생성 전 리소스 미리보기
@@ -3491,7 +3824,12 @@ function openLink(){ closeMenus(); $('#linkScrim').classList.add('open'); trapOp
 function closeLink(){ $('#linkScrim').classList.remove('open'); trapClose(); }
 function openType(){ $('#typeScrim').classList.add('open'); trapOpen($('#typeScrim')); }
 function closeType(){ $('#typeScrim').classList.remove('open'); trapClose(); }
-function openRestore(){ $('#resScrim').classList.add('open'); trapOpen($('#resScrim')); }
+function openRestore(){
+  $('#resScrim').classList.add('open'); trapOpen($('#resScrim'));
+  const u = quotaNow(), restoreCpu = 8, next = u.cpu + restoreCpu;
+  const h = document.getElementById('resQuotaHint');
+  if(h) h.innerHTML = `복원 후 쿼터 vCPU <b class="mono">${u.cpu} → ${next}</b> / ${QMAX.cpu}${next>QMAX.cpu?' — 상한을 초과합니다. 먼저 회수 대상을 정리하세요.':''}`;
+}
 function closeRestore(){ $('#resScrim').classList.remove('open'); trapClose(); }
 function openCred(){ $('#credScrim').classList.add('open'); trapOpen($('#credScrim')); }
 function closeCred(){ $('#credScrim').classList.remove('open'); trapClose(); }
@@ -3514,7 +3852,7 @@ function openDel(id){
     <div class="card"><div class="tw"><table><tbody>
       ${res.map(r => `<tr><td class="dim">${r[0]}</td><td class="mono">${r[1]}</td><td class="mono dim">${r[2]}</td></tr>`).join('')}
     </tbody></table></div></div>
-    <p class="hint">회수 후 쿼터 vCPU <b class="mono">${quotaNow().cpu} → ${quotaNow().cpu-e.cpu}</b> · 메모리 <b class="mono">${quotaNow().mem} → ${quotaNow().mem-e.mem} GB</b> · 디스크 <b class="mono">${quotaNow().disk} → ${quotaNow().disk-e.disk} GB</b></p>
+    ${quotaImpact({cpu:-e.cpu, mem:-e.mem, disk:-e.disk}).html}
     <p class="hint">일부 회수가 실패하면 삭제를 완료 처리하지 않고 고아 리소스로 표시합니다.</p>
     <div class="frow" style="margin-top:16px;margin-bottom:0"><div class="lbl">삭제 전 스냅샷</div>
       <div class="opts">
@@ -3707,13 +4045,13 @@ dev@${c.id}:~$ <span style="background:#C9D6DF;color:#0D1216">&nbsp;</span></div
     f:`<button class="btn btn-sm btn-quiet" onclick="copy(event,'ssh dev@${c.id}')">SSH 명령 복사</button>${fOk('닫기')}`}),
 
   startEnv: c => ({t:`${c.id} 시작`, w:480,
-    b:`${fKv([['현재 상태','정지됨'],['쿼터','시작하면 vCPU·메모리를 다시 점유'],['예상 시간','40초 내외']])}
-      <p class="hint">디스크는 정지 중에도 계속 점유하고 있었습니다.</p>`,
+    b:`${fKv([['현재 상태','정지됨'],['쿼터','변화 없음 — 정지 중에도 vCPU·메모리·디스크를 계속 점유하고 있었습니다'],['예상 시간','40초 내외']])}`,
     f:fFoot('시작','',{then:`transition('${c.id}','starting',2600);`})}),
 
   stopEnv: c => ({t:`${c.id} 정지`, w:480,
-    b:`${fBan('정지해도 <b>디스크는 반납되지 않습니다.</b> 쿼터를 비우려면 삭제하거나 스냅샷 후 삭제하세요.')}
-      ${fFld('실행 중인 세션','<div class="pre"><span class="t">SSH 1개 · 09-19 09:02 접속</span></div>','정지하면 세션이 끊깁니다.')}`,
+    b:`${fBan('정지해도 <b>vCPU·메모리·디스크 쿼터는 그대로 점유합니다.</b> 쿼터를 비우려면 삭제하세요.')}
+      ${fFld('실행 중인 세션','<div class="pre"><span class="t">SSH 1개 · 09-19 09:02 접속</span></div>','정지하면 세션이 끊깁니다.')}
+      <p class="hint">반납되는 쿼터 없음 — <button type="button" class="btn btn-sm btn-quiet" style="padding:0;text-decoration:underline" onclick="dlgClose();openDel('${c.id}')">대신 삭제하기</button></p>`,
     f:fFoot('정지','',{then:`transition('${c.id}','stopping',1800);`})}),
 
   restartEnv: c => ({t:`${c.id} 재시작`, w:480,
@@ -3726,25 +4064,71 @@ dev@${c.id}:~$ <span style="background:#C9D6DF;color:#0D1216">&nbsp;</span></div
       ${fFld('새 이름', fIn(c.id+'-2'), '접속 주소(*.env.acme.internal)와 연결 규칙이 함께 바뀝니다. 백엔드 리소스 이름은 유지됩니다.')}`,
     f:fFoot('변경','이름을 변경했습니다')}),
 
-  extend: c => ({t:'만료 연장', w:480,
-    b:`${fKv([['현재 만료','2026-09-22 (3일 후)'],['연장 이력','1회 · 상한 없음'],['적용 정책','platform · 기본 30일']])}
-      ${fFld('연장 기간', fOpt([['30일'],['90일'],['만료 없음','관리자만',true]],0))}
-      ${fFld('사유 (선택)', fIn('', '학기말까지 CI 유지'))}`,
-    f:fFoot('연장','30일 연장했습니다')}),
+  extend: c => { const e = ENVS.find(x=>x.id===c.id) || {}; return ({t:'만료 연장', w:480,
+    b:`${fKv([['대상',c.id||'—'],['현재 만료',e.exp||'—'],['적용 정책','platform · 기본 30일']])}
+      ${fFld('연장 기간', `<div class="opts" id="extPeriod">
+        <button class="opt" aria-pressed="true" onclick="one(this)" data-days="30">30일</button>
+        <button class="opt" aria-pressed="false" onclick="one(this)" data-days="90">90일</button>
+        <button class="opt" disabled data-days="0">만료 없음<span class="o2">관리자만</span></button>
+      </div>`)}
+      ${fFld('사유 (선택)', fIn('', '학기말까지 CI 유지'))}
+      <p class="hint">쿼터 변화 없음 — 만료만 연기됩니다. 반납 예정일도 함께 연기됩니다.</p>`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-pri" onclick="submitExtend('${c.id}')">연장</button>`}); },
 
-  snapCreate: c => ({t:'스냅샷 생성', w:500,
-    b:`${fFld('대상', `<div class="pre"><span class="t">${c.id||'data-etl'} · 디스크 ${(ENVS.find(e=>e.id===c.id)||{disk:200}).disk} GB</span></div>`)}
-      ${fFld('이름', fIn((c.id||'data-etl')+'-0919'))}
-      ${fFld('보관 기간', fOpt([['30일'],['90일'],['무기한','관리자만',true]],1))}
+  quotaRequest: c => { const idx = c.item==='mem'?1:c.item==='disk'?2:0; return ({t:'쿼터 상향 요청', w:520,
+    b:`${fFld('항목', `<div class="opts" id="qrItem">
+        <button class="opt" data-unit="" aria-pressed="${idx===0}" onclick="one(this)">vCPU</button>
+        <button class="opt" data-unit="GB" aria-pressed="${idx===1}" onclick="one(this)">메모리</button>
+        <button class="opt" data-unit="GB" aria-pressed="${idx===2}" onclick="one(this)">디스크</button>
+      </div>`)}
+      ${fFld('필요한 양', `<input type="text" id="qrAmount" placeholder="예: 8">`)}
+      ${fFld('기간', `<div class="opts" id="qrPeriod">
+        <button class="opt" aria-pressed="true" onclick="one(this)">영구</button>
+        <button class="opt" aria-pressed="false" onclick="one(this)">2주<span class="o2">임시 · 자동 복귀</span></button>
+        <button class="opt" aria-pressed="false" onclick="one(this)">1개월<span class="o2">임시 · 자동 복귀</span></button>
+      </div>`)}
+      ${fFld('사유', `<textarea id="qrReason" placeholder="요청 사유를 입력하세요"></textarea>`)}
+      <p class="hint">제출하면 쿼터 페이지 이력에 "검토 중"으로 표시됩니다. 승인 전까지는 마법사에서 더 작은 크기로 먼저 만들 수 있습니다.</p>`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-pri" onclick="submitQuotaRequest()">요청 제출</button>`}); },
+
+  snapCreate: c => { const e = ENVS.find(x=>x.id===c.id); const disk = e ? e.disk : 50;
+    const impact = quotaImpact({disk}); return ({t:'스냅샷 생성', w:500,
+    b:`${fFld('대상', `<div class="pre"><span class="t">${c.id||'—'} · 디스크 ${disk} GB</span></div>`)}
+      ${fFld('이름', `<input type="text" id="snapName" value="${(c.id||'snap')+'-0924'}">`)}
+      ${fFld('보관 기간', `<div class="opts" id="snapKeep">
+        <button class="opt" aria-pressed="false" onclick="one(this)" data-keep="30일">30일</button>
+        <button class="opt" aria-pressed="true" onclick="one(this)" data-keep="90일">90일</button>
+        <button class="opt" disabled data-keep="무기한">무기한<span class="o2">관리자만</span></button>
+      </div>`)}
       ${fFld('일관성', fOpt([['정지 후 생성','데이터 일관성 보장'],['실행 중 생성','빠르지만 쓰기 중 데이터는 보장 안 됨']],0))}
-      <p class="hint">스냅샷은 디스크 쿼터를 점유합니다. 생성 후 ${fmt(quotaNow().disk)} → ${fmt(quotaNow().disk + (ENVS.find(e=>e.id===c.id)||{disk:200}).disk)} GB / ${fmt(QMAX.disk)} GB.</p>`,
-    f:fFoot('생성','스냅샷을 만들고 있습니다',{then:"go('snapshots');"})}),
+      ${impact.html}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-pri" ${impact.over?'disabled':''} onclick="doSnapCreate('${c.id||''}')">생성</button>`}); },
 
-  snapDelete: c => ({t:'스냅샷 삭제', w:460,
+  snapThenDelete: c => { const e = ENVS.find(x=>x.id===c.id) || {cpu:0,mem:0,disk:0};
+    const existing = SNAPSHOTS.find(s => s.src === c.id);
+    const keepImpact = quotaImpact({cpu:-e.cpu, mem:-e.mem, disk:-e.disk});
+    const newImpact = quotaImpact({cpu:-e.cpu, mem:-e.mem, disk:0});
+    return ({t:`${c.id} 스냅샷 후 삭제`, w:560,
+    b:`${fBan(`기존 스냅샷을 만든 뒤 <b>${c.id}</b>을(를) 삭제합니다. 스냅샷도 디스크 쿼터를 점유하므로, 새 스냅샷을 만들면 디스크는 줄지 않습니다.`,'i')}
+      ${fFld('방식', `<div class="opts" id="stdMode" style="flex-direction:column;align-items:stretch">
+        ${existing ? `<button class="opt" aria-pressed="true" onclick="one(this);toggleStdImpact()" data-mode="keep">기존 스냅샷 보존하고 삭제<span class="o2">${existing.n} · ${existing.at} · ${existing.gb}GB — 재사용</span></button>` : ''}
+        <button class="opt" aria-pressed="${existing?'false':'true'}" onclick="one(this);toggleStdImpact()" data-mode="new">새 스냅샷을 만들고 삭제<span class="o2">방금 생성 · ${e.disk}GB</span></button>
+      </div>`)}
+      <div id="stdImpactKeep" ${existing?'':'hidden'}>${keepImpact.html}</div>
+      <div id="stdImpactNew" ${existing?'hidden':''}>${newImpact.html}</div>`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-danger" onclick="doSnapThenDelete('${c.id}')">삭제</button>`}); },
+
+  snapDelete: c => { const s = SNAPSHOTS.find(x => x.n === c.name) || SNAPSHOTS[0] || {n:'—',gb:0,src:'—',at:'—'};
+    const impact = quotaImpact({disk:-s.gb}); return ({t:'스냅샷 삭제', w:460,
     b:`${fBan('삭제한 스냅샷은 복구할 수 없습니다.')}
-      ${fKv([['스냅샷',c.name||'data-etl-0919'],['크기','200 GB'],['원본','data-etl (삭제됨)']])}
-      <p class="hint">삭제 후 디스크 쿼터 ${fmt(quotaNow().disk)} → ${fmt(quotaNow().disk - 200)} GB.</p>`,
-    f:fFoot('삭제','스냅샷을 삭제했습니다',{danger:true})}),
+      ${fKv([['스냅샷',s.n],['크기',s.gb+' GB'],['원본',ENVS.some(e=>e.id===s.src)?s.src:s.src+' (삭제됨)']])}
+      ${impact.html}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-danger" onclick="doSnapDelete('${s.n}')">삭제</button>`}); },
 
   exportEnv: c => ({t:'내보내기', w:520,
     b:`${fFld('형식', fOpt([['Terraform HCL','환경 전체 정의'],['openrc','OpenStack CLI 환경변수 (원본 백엔드용)'],['kubeconfig','쿠버네티스 환경만']],0))}
@@ -3954,7 +4338,7 @@ runcmd:
   editProject: c => ({t:`프로젝트 — ${c.name||'platform'}`, w:600,
     b:`${fFld('이름', fIn(c.name||'platform'))}
       ${fFld('용도', fOpt([['개발팀'],['교육'],['실험'],['운영']],0))}
-      ${fFld('쿼터', fKv([['현재','vCPU 35 / 40 · 디스크 750 / 1024 GB'],['정책','기본 + 관리자 상향'],['변경','기본 초과 시 승인 필요']]))}
+      ${fFld('쿼터', fKv([['현재',`vCPU ${quotaNow().cpu} / ${QMAX.cpu} · 디스크 ${fmt(quotaNow().disk)} / ${fmt(QMAX.disk)} GB`],['정책','기본 + 관리자 상향'],['변경','기본 초과 시 승인 필요']]))}
       ${fFld('백엔드 매핑', fTbl(['백엔드','객체','도메인','쿼터 적용'],[
         ['<span class="dim mono">os-main</span>','<span class="mono">Project platform</span>','<span class="mono">kloudhub</span>','<span class="st run">동기화됨</span>'],
         ['<span class="dim mono">cs-aux</span>','<span class="mono">Account platform</span>','<span class="mono">kloudhub</span>','<span class="st run">동기화됨</span>']]),'KloudHub 쿼터를 바꾸면 백엔드 쿼터에도 같이 반영됩니다.')}
@@ -4072,7 +4456,7 @@ runcmd:
       ${fFld('포함 범위', fOpt([['시스템 디스크만','작고 빠름'],['전체 디스크','데이터 포함']],0))}
       ${fFld('공유 범위', fOpt([['나만'],['프로젝트'],['공용 요청','관리자 승인']],0))}
       ${fFld('보관 기간', fOpt([['30일'],['90일'],['무기한','관리자만',true]],1))}
-      ${fBan(`커스텀 이미지 <b class="mono">${IMAGES.count} / ${QMAX.img}개</b> · 용량 <b class="mono">${IMAGES.gb} / ${QMAX.imgGB} GB</b>. 이미지 용량은 디스크 쿼터에도 함께 잡힙니다.`)}`,
+      ${fBan(`커스텀 이미지 <b class="mono">${IMAGES.count} / ${QMAX.img}개</b> · 용량 <b class="mono">${IMAGES.gb} / ${QMAX.imgGB} GB</b>. 디스크 쿼터와는 분리되어 관리됩니다.`)}`,
     f:fFoot('만들기','이미지를 만들고 있습니다',{then:"go('images');"})}),
 
   imageShare: c => ({t:`이미지 — ${c.name||'go-dev-base'}`, w:540,
@@ -4158,7 +4542,7 @@ spec:
 
   startInst: c => ({t:`${c.n} 시작`, w:460,
     b:`${fKv([['현재','정지됨'],['서버 타입','mem.l'],['예상 시간','40초 내외']])}
-      <p class="hint">디스크는 정지 중에도 계속 점유하고 있었습니다.</p>`,
+      <p class="hint">쿼터 변화 없음 — 정지 중에도 vCPU·메모리·디스크를 계속 점유하고 있었습니다.</p>`,
     f:fFoot('시작','인스턴스를 시작합니다')}),
 
   resize: c => ({t:`크기 변경 — ${c.n}`, w:540,
@@ -4180,14 +4564,15 @@ spec:
       ${fBan('배치하면 환경 단위 정책(만료·자동 정지·회수)이 적용됩니다. 템플릿 정의는 없으므로 재생성과 노드 추가는 할 수 없습니다.','i')}`,
     f:fFoot('배치','환경에 배치했습니다')}),
 
-  newVolume: () => ({t:'볼륨 생성', w:540,
-    b:`${fFld('이름', fIn('', 'data-01'))}
-      ${fFld('크기 (GB)', fIn('100'))}
+  newVolume: () => { const impact = quotaImpact({disk:100}); return ({t:'볼륨 생성', w:540,
+    b:`${fFld('이름', `<input type="text" id="nvName" placeholder="data-01">`)}
+      ${fFld('크기 (GB)', `<input type="text" id="nvSize" value="100">`)}
       ${fFld('종류', fOpt([['데이터'],['부팅','이미지에서 생성']],0))}
       ${fFld('존', fOpt([['kr-a','표준 존'],['kr-b','보조 존']],0),'볼륨은 같은 존의 인스턴스에만 연결할 수 있습니다.')}
       ${fFld('생성 후 연결', fOpt([['연결 안 함'],['dev-sandbox-0'],['ci-runner-0']],0))}
-      ${fBan(`생성 후 디스크 쿼터 <b class="mono">${fmt(quotaNow().disk)} → ${fmt(quotaNow().disk+100)}</b> / ${fmt(QMAX.disk)} GB`,'i')}`,
-    f:fFoot('만들기','볼륨을 만들고 있습니다')}),
+      ${impact.html}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-pri" ${impact.over?'disabled':''} onclick="doNewVolume()">만들기</button>`}); },
 
   attachVol: c => ({t:`볼륨 연결 — ${c.n}`, w:520,
     b:`${fKv([['볼륨',c.n||'vol-scratch'],['크기','200 GB'],['존','kr-a']])}
@@ -4202,24 +4587,29 @@ spec:
       ${fFld('부팅 볼륨 여부', fKv([['종류','데이터 볼륨 — 분리 가능']]))}`,
     f:fFoot('분리','볼륨을 분리했습니다',{danger:true})}),
 
-  expandVol: c => ({t:`볼륨 확장 — ${c.n}`, w:520,
-    b:`${fKv([['현재 크기',(c.gb||50)+' GB'],['연결 대상','dev-sandbox-0'],['종류','부팅 볼륨']])}
-      ${fFld('새 크기 (GB)', fIn(String((c.gb||50)+50)),'줄일 수는 없습니다.')}
+  expandVol: c => { const t = resolveVolumeTarget(c.n); const cur = c.gb || t.gb;
+    const impact = quotaImpact({disk:50}); return ({t:`볼륨 확장 — ${c.n}`, w:520,
+    b:`${fKv([['현재 크기',cur+' GB'],['연결 대상', t.type==='env'?t.ref.id+'-0':(t.ref&&t.ref.att)||'—'],['종류', t.type==='env'?'부팅 볼륨':'데이터 볼륨']])}
+      ${fFld('새 크기 (GB)', `<input type="text" id="evSize" value="${cur+50}">`, '줄일 수는 없습니다.')}
       ${fBan('확장 후 게스트 OS에서 파티션과 파일시스템을 늘려야 합니다. <span class="mono">growpart</span> · <span class="mono">resize2fs</span>')}
-      <p class="hint">확장 후 디스크 쿼터 <b class="mono">${fmt(quotaNow().disk)} → ${fmt(quotaNow().disk+50)}</b> / ${fmt(QMAX.disk)} GB</p>`,
-    f:fFoot('확장','볼륨을 확장하고 있습니다')}),
+      ${impact.html}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-pri" ${impact.over?'disabled':''} onclick="doExpandVol('${c.n}')">확장</button>`}); },
 
-  allocIP: () => ({t:'공인 IP 할당', w:500,
+  allocIP: () => { const impact = quotaImpact({ip:1}); return ({t:'공인 IP 할당', w:500,
     b:`${fFld('풀', fOpt([['kr-a','203.0.113.0/24'],['kr-b','198.51.100.0/24']],0))}
       ${fFld('연결 대상', fOpt([['연결 안 함','나중에 연결'],['team-k8s-w-0'],['data-etl-0','다른 존',true]],0))}
-      ${fBan(`공인 IP 쿼터 <b class="mono">${quotaNow().ip} / ${QMAX.ip}</b>. 연결하지 않아도 쿼터를 점유합니다.`)}`,
-    f:fFoot('할당','공인 IP를 할당했습니다')}),
+      ${impact.html}
+      <p class="hint">연결하지 않아도 쿼터를 점유합니다.</p>`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-pri" ${impact.over?'disabled':''} onclick="doAllocIP()">할당</button>`}); },
 
-  releaseIP: c => ({t:'공인 IP 해제', w:460,
-    b:`${fKv([['주소',c.ip||'203.0.113.42'],['연결 대상','dev-sandbox-0'],['환경','dev-sandbox']])}
+  releaseIP: c => { const impact = quotaImpact({ip:-1}); return ({t:'공인 IP 해제', w:460,
+    b:`${fKv([['주소',c.ip||'—'],['연결 대상', (ENVS.find(e=>e.pubip===c.ip)||{}).id ? (ENVS.find(e=>e.pubip===c.ip)||{}).id+'-0' : '—'],['환경', (ENVS.find(e=>e.pubip===c.ip)||{}).id || '—']])}
       ${fBan('해제하면 외부에서 접근할 수 없게 되고, 같은 주소를 다시 받는다는 보장이 없습니다.')}
-      <p class="hint">해제 후 공인 IP 쿼터 ${quotaNow().ip} → ${quotaNow().ip-1} / ${QMAX.ip}</p>`,
-    f:fFoot('해제','공인 IP를 해제했습니다',{danger:true})}),
+      ${impact.html}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-danger" onclick="doReleaseIP('${c.ip||''}')">해제</button>`}); },
 
   newNet: () => ({t:'네트워크 생성', w:560,
     b:`${fFld('이름', fIn('', 'shared-db'))}
@@ -4343,7 +4733,7 @@ spec:
 
   /* 기능 추가: 환경/인스턴스/볼륨 대량 정지·삭제·분리에 확인 다이얼로그 추가 */
   bulkStopEnv: c => ({t:`환경 ${c.ids.length}개 정지`, w:520,
-    b:`${fBan('정지해도 <b>디스크는 반납되지 않습니다.</b> 실행 중인 세션이 있다면 끊깁니다.')}
+    b:`${fBan('정지해도 <b>vCPU·메모리·디스크 쿼터는 그대로 점유합니다.</b> 실행 중인 세션이 있다면 끊깁니다.')}
       ${fFld('대상', fTbl(['환경','사양'], c.ids.map(id => {
         const e = ENVS.find(x => x.id === id) || {};
         return [`<span class="mono">${esc(id)}</span>`, `<span class="dim mono">${e.cpu} vCPU · ${e.mem}GB</span>`];
@@ -4352,7 +4742,7 @@ spec:
        <button class="btn btn-warn" onclick="dlgClose();doBulkStopEnv(BULK_STOP_IDS)">정지</button>`}),
 
   bulkStopInst: c => ({t:`인스턴스 ${c.names.length}대 정지`, w:520,
-    b:`${fBan('정지해도 <b>디스크는 반납되지 않습니다.</b> 접속 중인 세션이 있다면 끊깁니다.')}
+    b:`${fBan('정지해도 <b>vCPU·메모리·디스크 쿼터는 그대로 점유합니다.</b> 접속 중인 세션이 있다면 끊깁니다.')}
       ${fFld('대상', fTbl(['인스턴스'], c.names.map(n => [`<span class="mono">${esc(n)}</span>`])))}`,
     f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
        <button class="btn btn-warn" onclick="dlgClose();doBulkInst()">정지</button>`}),
@@ -4466,10 +4856,27 @@ function wireLoose(root){
 wireLoose();
 
 function boot(){
-  const steps = [renderEnvList, renderInstances, renderVolumes, renderNetwork, renderTpl, renderAllQuota, renderOnboard, applyDashboard, renderTeamPending, wireLoose, makeRowsFocusable, responsify, () => setMode('user')];
+  const steps = [renderEnvList, renderInstances, renderVolumes, renderNetwork, renderTpl, renderAllQuota, renderSnapshots, renderImageQuota, renderQuotaPage, renderOnboard, applyDashboard, renderTeamPending, wireLoose, makeRowsFocusable, responsify, renderProjectPickerQuota, () => setMode('user')];
   steps.forEach(fn => { try { fn(); } catch(err){ console.error('boot step failed', err); } });
 }
 boot();
+
+/* ================= 개발용 자체 검증 — 콘솔에서 verifyQuota() 실행 ================= */
+function verifyQuota(){
+  const q = quotaNow(), r = reclaimList();
+  const sum = k => r.reduce((a,x) => a + (x[k]||0), 0);
+  const checks = [
+    ['cpu', q.cpu, 35], ['mem', q.mem, 93], ['disk', q.disk, 1338], ['ip', q.ip, 3],
+    ['disk.env', q.parts.envDisk, 660], ['disk.vol', q.parts.volDisk, 370], ['disk.snap', q.parts.snapDisk, 260],
+    ['QMAX.disk', QMAX.disk, 1536],
+    ['reclaim.count', r.length, 4], ['reclaim.cpu', sum('cpu'), 14], ['reclaim.mem', sum('mem'), 44], ['reclaim.disk', sum('disk'), 500],
+    ['nav badge', document.querySelector('[data-nav="quota"] .cnt').textContent, '88%'],
+    ['member sum', ['sh','dkim','jlee'].reduce((a,o) => a + ENVS.filter(e => e.owner===o).reduce((b,e) => b + e.cpu, 0), 0) + SYSTEM.cpu, 35]
+  ];
+  const fail = checks.filter(([,a,b]) => a !== b);
+  console.table(checks.map(([k,a,b]) => ({k, actual:a, expected:b, ok:a===b})));
+  return fail.length ? `FAIL ${fail.length}` : 'ALL PASS';
+}
 </script>
 </body>
 </html>
