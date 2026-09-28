@@ -205,6 +205,8 @@ body[data-busy="few"] .st.prog::before{animation:pulse 1.4s ease-in-out infinite
 .kv{display:grid;grid-template-columns:124px 1fr;gap:8px 14px;font-size:13.5px}
 .kv .k{color:var(--text-3)}
 .kv .v{font-family:"IBM Plex Mono",monospace;font-size:13px;word-break:break-all}
+.kv a,.tw td a{color:var(--sel)}
+.slot{display:inline-block;width:34px}
 .pre{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:8px 11px;font-family:"IBM Plex Mono",monospace;font-size:13px;overflow:auto}
 .pre .t{flex:1;white-space:nowrap}
 .pre.block{display:block;line-height:1.75;white-space:pre;color:var(--text-2);font-size:12.5px}
@@ -686,6 +688,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     <div class="grow"></div>
     <div id="iActions" style="display:flex;gap:6px"></div>
   </div>
+  <div class="tabs" id="iTabs"></div>
   <div id="iBody"></div>
 </section>
 
@@ -882,15 +885,15 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
       <tr><td class="name">go-dev-base <span class="chip">내 이미지</span></td><td class="dim">dev-sandbox 에서 생성</td><td class="dim">Ubuntu 24.04 + Go</td><td class="num">12 GB</td><td class="dim mono">kr-a</td><td class="dim">나만</td><td class="dim mono">21일</td>
         <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button> <button class="btn btn-sm btn-quiet rw" onclick="dlg('imageShare',{name:'go-dev-base'})"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
       <tr><td class="name">pg16-seeded <span class="chip w">승인 대기</span></td><td class="dim">pg-staging 에서 생성</td><td class="dim">Ubuntu 24.04 + PG16</td><td class="num">6 GB</td><td class="dim mono">kr-a</td><td class="dim">공용 요청</td><td class="dim mono">30일</td>
-        <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('imageShare',{name:'pg16-seeded'})">요청 취소</button></td></tr>
+        <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('imageShare',{name:'pg16-seeded'})">요청 취소</button> <span class="slot"></span></td></tr>
       <tr><td class="name">team-base <span class="chip">프로젝트</span></td><td class="dim">dkim 가 공유</td><td class="dim">Ubuntu 22.04 + Python</td><td class="num">26 GB</td><td class="dim mono">kr-b</td><td class="dim">프로젝트</td><td class="dim mono">무기한</td>
-        <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button></td></tr>
+        <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button> <span class="slot"></span></td></tr>
       <tr><td class="name faint">ubuntu-24.04-server</td><td class="faint">공용</td><td class="dim">Ubuntu 24.04 LTS</td><td class="num faint">2.4 GB</td><td class="dim mono">두 존 모두</td><td class="dim">공용</td><td class="faint">—</td>
-        <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button></td></tr>
+        <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button> <span class="slot"></span></td></tr>
       <tr><td class="name faint">ubuntu-22.04-server</td><td class="faint">공용</td><td class="dim">Ubuntu 22.04 LTS</td><td class="num faint">2.2 GB</td><td class="dim mono">두 존 모두</td><td class="dim">공용</td><td class="faint">—</td>
-        <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button></td></tr>
+        <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button> <span class="slot"></span></td></tr>
       <tr><td class="name faint">python-3.12-base</td><td class="faint">공용</td><td class="dim">Ubuntu 22.04 + Python</td><td class="num faint">9.8 GB</td><td class="dim mono">kr-b</td><td class="dim">공용</td><td class="faint">—</td>
-        <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button></td></tr>
+        <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button> <span class="slot"></span></td></tr>
     </tbody>
   </table></div>
   <div class="card-foot">공용 이미지는 관리자가 관리합니다. 내 이미지를 공용으로 올리려면 승인 요청이 필요합니다.</div>
@@ -1282,13 +1285,8 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
   <div class="head"><h1>서버 타입</h1><div class="sub">생성 화면의 크기 선택지 — Flavor / Service Offering 매핑</div><div class="grow"></div>
     <button class="btn btn-pri" onclick="openType()"><svg class="ic ic-sm"><use href="#i-plus"/></svg>타입 추가</button></div>
   <div class="card"><div class="tw"><table>
-    <thead><tr><th>표시명</th><th>코드</th><th class="num">vCPU</th><th class="num">메모리</th><th>OpenStack</th><th>CloudStack</th><th>노출</th><th></th></tr></thead>
-    <tbody>
-      <tr><td class="name">S</td><td class="mono dim">std.s</td><td class="num">2</td><td class="num">4 GB</td><td class="mono dim">m1.small</td><td class="mono dim">Small Instance</td><td class="dim">전체</td><td class="act"><button class="btn btn-sm btn-quiet" onclick="openType()">편집</button></td></tr>
-      <tr><td class="name">M</td><td class="mono dim">std.m</td><td class="num">4</td><td class="num">8 GB</td><td class="mono dim">m1.medium</td><td class="mono dim">Medium Instance</td><td class="dim">전체</td><td class="act"><button class="btn btn-sm btn-quiet" onclick="openType()">편집</button></td></tr>
-      <tr><td class="name">L</td><td class="mono dim">std.l</td><td class="num">8</td><td class="num">16 GB</td><td class="mono dim">m1.large</td><td class="mono dim">Large Instance</td><td class="dim">전체</td><td class="act"><button class="btn btn-sm btn-quiet" onclick="openType()">편집</button></td></tr>
-      <tr><td class="name">메모리 L</td><td class="mono dim">mem.l</td><td class="num">8</td><td class="num">64 GB</td><td class="mono dim">r1.large</td><td class="faint">—</td><td class="dim">platform</td><td class="act"><button class="btn btn-sm btn-quiet" onclick="openType()">편집</button></td></tr>
-    </tbody>
+    <thead><tr><th>표시명</th><th>코드</th><th class="num">vCPU</th><th class="num">메모리</th><th>용도</th><th>OpenStack</th><th>CloudStack</th><th>노출</th><th></th></tr></thead>
+    <tbody id="typeRows"></tbody>
   </table></div>
   <div class="card-foot">한쪽 백엔드에만 매핑된 타입은 해당 클라우드를 선택했을 때만 생성 화면에 나타납니다.</div>
   </div>
@@ -1570,11 +1568,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
           <button class="opt" aria-pressed="false" onclick="tog(this)">Rust 1.83</button>
         </div></div>
       <div class="frow"><div class="lbl">크기</div>
-        <div class="opts">
-          <button class="opt" data-cpu="2" data-mem="4" onclick="pickSize(this)">S<span class="o2">2 vCPU · 4GB</span></button>
-          <button class="opt" data-cpu="4" data-mem="8" aria-pressed="true" onclick="pickSize(this)">M<span class="o2">4 vCPU · 8GB</span></button>
-          <button class="opt" data-cpu="8" data-mem="16" disabled>L<span class="o2">8 vCPU · 16GB</span></button>
-        </div>
+        <div class="opts" id="wzSizeOpts"></div>
         <p class="hint w" id="wzQuotaHint">L은 남은 vCPU 쿼터를 초과합니다.
           <button class="btn btn-sm btn-quiet" onclick="closeWizard();go('quota')">쿼터 정리</button>
           <button class="btn btn-sm btn-quiet" onclick="dlg('quotaRequest',{item:'cpu'})">쿼터 상향 요청</button></p></div>
@@ -1934,6 +1928,18 @@ const QMAX_LARGE = {cpu:600, mem:1600, disk:9216, ip:64, img:40, imgGB:400};
 const SYSTEM = {cpu:1, mem:1, disk:8};        // 프로젝트 VPC 라우터
 const ORPHAN = {cpu:2, mem:4, disk:40};       // old-ci 생성 실패 잔여
 const IMAGES = {count:3, gb:42};              // 개수·용량 쿼터로만 관리, 디스크 쿼터와는 분리
+
+// 서버 타입(플레이버) 단일 출처 — 사용자 카드·인스턴스 상세·관리자 표가 모두 여기서 그려짐. 과금 없이 쿼터 소모(vCPU·메모리)만 표시.
+const SERVER_TYPES = {
+  'std.s': {label:'S',        cpu:2, mem:4,  use:'실습·가벼운 개발',        os:'m1.small',  cs:'Small Instance',  scope:'전체'},
+  'std.m': {label:'M',        cpu:4, mem:8,  use:'빌드·컨테이너',           os:'m1.medium', cs:'Medium Instance', scope:'전체'},
+  'std.l': {label:'L',        cpu:8, mem:16, use:'대규모 빌드·서비스 운영', os:'m1.large',  cs:'Large Instance',  scope:'전체'},
+  'mem.l': {label:'메모리 L', cpu:8, mem:64, use:'데이터 처리·인메모리 DB', os:'r1.large',  cs:null,              scope:'platform'}
+};
+const typeLabel = code => (SERVER_TYPES[code] || {label:code}).label;
+const typeByCpuMem = (cpu, mem) => Object.keys(SERVER_TYPES).find(k => SERVER_TYPES[k].cpu === cpu && SERVER_TYPES[k].mem === mem) || 'std.m';
+// 보안 업데이트가 있는 이미지 — 온프레미스는 CSP처럼 자동 패치가 없어 목록·상세에 배지로 알림
+const IMAGE_UPDATE = new Set(['ubuntu-22.04-server']);
 
 function quotaNow(){
   const live = ENVS.filter(e => e.state !== 'failed');
@@ -2380,6 +2386,8 @@ function refreshAll(){
   document.body.dataset.busy = busy > 0 && busy <= 3 ? 'few' : 'many';
   const d = document.querySelector('[data-view="env-detail"]');
   if(d && !d.hidden) renderDetail();
+  const idv = document.querySelector('[data-view="inst-detail"]');
+  if(idv && !idv.hidden) renderInstDetail();
 }
 function transition(id, mid, ms, done){
   const e = ENVS.find(x => x.id === id); if(!e) return;
@@ -2449,8 +2457,8 @@ function gb(n){ return n >= 1024 ? (n/1024).toFixed(1).replace(/\.0$/,'') + ' TB
 
 /* ---------- 인스턴스 / 볼륨 파생 ---------- */
 const EXTRA_INSTANCES = [
-  {n:'scratch-01', state:'stopped', env:null, type:'std.s', img:'rocky-9', ip:'10.64.8.11', fip:null, be:'kr-a'},
-  {n:'old-ci-0',   state:'stopped', env:null, type:'std.s', img:'ubuntu-24.04-server', ip:'10.64.7.11', fip:null, be:'kr-a', orphan:true}
+  {n:'scratch-01', state:'stopped', env:null, type:'std.s', img:'rocky-9', ip:'10.64.8.11', fip:null, be:'kr-a', cpu:2, mem:4},
+  {n:'old-ci-0',   state:'stopped', env:null, type:'std.s', img:'ubuntu-24.04-server', ip:'10.64.7.11', fip:null, be:'kr-a', orphan:true, cpu:2, mem:4}
 ];
 const EXTRA_VOLUMES = [
   {n:'team-k8s-data', gb:120, kind:'데이터', att:'team-k8s-w-0', dev:'/dev/vdb', env:'team-k8s', be:'kr-a'},
@@ -2464,10 +2472,13 @@ function instances(){
     const be = zlabel(e.zone);
     const img = e.tpl.includes('배치') ? 'python-3.12-base' : (e.tpl.includes('쿠버') ? 'ubuntu-22.04-server' : 'ubuntu-24.04-server');
     if(e.nodes){
-      e.nodes.forEach(n => out.push({n:n.n, state:n.s, env:e.id, type:(n.spec||'').includes('8') ? 'std.l' : 'std.m',
-        img, ip:n.ip, fip:(n.r === 'control-plane' && e.fip) ? e.pubip : null, be}));
+      e.nodes.forEach(n => {
+        const m = (n.spec||'').match(/(\d+) vCPU · (\d+)GB/), cpu = m ? +m[1] : 0, mem = m ? +m[2] : 0;
+        out.push({n:n.n, state:n.s, env:e.id, type:typeByCpuMem(cpu, mem), cpu, mem,
+          img, ip:n.ip, fip:(n.r === 'control-plane' && e.fip) ? e.pubip : null, be});
+      });
     } else {
-      out.push({n:e.id + '-0', state:e.state, env:e.id,
+      out.push({n:e.id + '-0', state:e.state, env:e.id, cpu:e.cpu, mem:e.mem,
         type:(e.flavor||'std.m').split(' — ')[0], img, ip:(e.net||'').split('· ')[1]?.replace(/0\/24$/,'11') || '—',
         fip:e.fip ? e.pubip : null, be});
     }
@@ -2581,45 +2592,146 @@ function renderInstances(){
 }
 
 // 기능 추가: 인스턴스 상세 페이지 (목록 클릭 시 콘솔·재시작·로그 등 다음 행동을 바로 제공)
-let curInst = null;
-function openInst(n){ curInst = n; go('inst-detail'); }
+let curInst = null, curInstTab = 'ov';
+function openInst(n){ curInst = n; curInstTab = 'ov'; go('inst-detail'); }
+function envLogLines(e){
+  return ((e && e.log) || '').split('\n').map(l => {
+    const m = l.match(/^\[(\d\d-\d\d \d\d:\d\d)(?::\d\d)?\]\s*(.*)$/);
+    return m ? {t:m[1], msg:m[2]} : null;
+  }).filter(Boolean);
+}
+// 온프레미스: 관리자만 배치된 물리 호스트를 본다 (데모용으로 이름에서 결정적으로 고름)
+const HOSTS = {'kr-a':['os-compute-01','os-compute-02','os-compute-03'], 'kr-b':['cs-kvm-01','cs-kvm-02']};
+const hostOf = i => { const l = HOSTS[i.be] || ['—']; return l[[...i.n].reduce((a,c) => a + c.charCodeAt(0), 0) % l.length]; };
+const imgBadge = name => IMAGE_UPDATE.has(name)
+  ? ' <span class="chip w" title="이 이미지에 보안 업데이트가 있습니다. 새로 만들 때는 최신 이미지를 권장합니다.">보안 업데이트</span>' : '';
+function openImage(name){
+  go('images');
+  setTimeout(() => {
+    const tr = [...document.querySelectorAll('[data-view="images"] tbody tr')].find(r => { const c = r.querySelector('.name'); return c && c.textContent.trim().startsWith(name); });
+    if(tr){ tr.scrollIntoView({block:'center'}); tr.classList.add('sel'); setTimeout(() => tr.classList.remove('sel'), 2500); }
+  }, 60);
+}
+
 function renderInstDetail(){
   const i = instances().find(x => x.n === curInst); if(!i) return;
+  const eid = i.env || i.n;
   document.getElementById('iCrumb').textContent = i.n;
   document.getElementById('iName').textContent = i.n;
   document.getElementById('iState').innerHTML = stTag({state:i.state});
-  document.getElementById('iSub').textContent = `${i.env || '미배치'} · ${i.be} · ${i.ip}`;
+  document.getElementById('iSub').textContent = `${i.env || '미배치'} · ${i.be} · ${typeLabel(i.type)} · ${i.ip}`;
   document.getElementById('iActions').innerHTML = `
     ${!i.orphan ? `<button class="btn rw" onclick="dlg('console',{n:'${i.n}'})"><svg class="ic ic-sm"><use href="#i-term"/></svg>콘솔</button>` : ''}
     ${i.state==='running'
-      ? `<button class="btn rw" onclick="dlg('restartEnv',{id:'${i.n}'})"><svg class="ic ic-sm"><use href="#i-retry"/></svg>재시작</button><button class="btn rw" onclick="dlg('stopEnv',{id:'${i.n}'})">정지</button>`
+      ? `<button class="btn rw" onclick="dlg('restartEnv',{id:'${eid}'})"><svg class="ic ic-sm"><use href="#i-retry"/></svg>재시작</button><button class="btn rw" onclick="dlg('stopEnv',{id:'${eid}'})">정지</button>`
       : (i.orphan ? `<button class="btn btn-warn rw" onclick="dlg('delInstance',{n:'${i.n}'})">회수</button>`
-                  : `<button class="btn btn-pri rw" onclick="dlg('startInst',{n:'${i.n}'})"><svg class="ic ic-sm"><use href="#i-play"/></svg>시작</button>`)}
+                  : `<button class="btn btn-pri rw" onclick="dlg('startEnv',{id:'${eid}'})"><svg class="ic ic-sm"><use href="#i-play"/></svg>시작</button>`)}
     <button class="btn btn-quiet rw" onclick="instMenu(event,'${i.n}','${i.state}')"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button>`;
-  document.getElementById('iBody').innerHTML = `
-    <div class="g2">
-      <div class="sec">
-        <div class="sec-head"><h2>정보</h2></div>
-        <div class="card"><div class="card-body">
-          <div class="kv">
-            <span class="k">환경</span><span class="v">${i.env ? `<a href="#" onclick="event.preventDefault();openEnv('${i.env}')">${esc(i.env)}</a>` : '미배치'}</span>
-            <span class="k">서버 타입</span><span class="v mono">${esc(i.type)}</span>
-            <span class="k">이미지</span><span class="v">${esc(i.img)}</span>
-            <span class="k">내부 IP</span><span class="v mono">${esc(i.ip)}</span>
-            <span class="k">공인 IP</span><span class="v mono">${i.fip ? esc(i.fip) : '—'}</span>
-            <span class="k">존</span><span class="v">${esc(i.be)}</span>
-          </div>
-        </div></div>
-      </div>
-      <div class="sec">
-        <div class="sec-head"><h2>최근 로그</h2></div>
-        <div class="card"><div class="card-body">
-          <div class="pre" style="min-height:120px">${i.state==='running'
-            ? '[방금] health check 통과\n[1분 전] 애플리케이션 프로세스 시작\n[2분 전] cloud-init 완료'
-            : '중지된 인스턴스는 로그를 표시하지 않습니다. 시작 후 다시 확인하세요.'}</div>
-        </div></div>
-      </div>
-    </div>`;
+  document.getElementById('iTabs').innerHTML = [['ov','개요'],['link','연결'],['log','로그·활동']]
+    .map(([k,l]) => `<button class="tab" aria-selected="${k===curInstTab}" onclick="curInstTab='${k}';renderInstDetail()">${l}</button>`).join('');
+  document.getElementById('iBody').innerHTML = ({ov:iOv, link:iLink, log:iLog})[curInstTab](i);
+  responsify(document.querySelector('[data-view="inst-detail"]'));
+}
+
+function iOv(i){
+  const e = ENVS.find(x => x.id === i.env), t = SERVER_TYPES[i.type];
+  const vols = volumes().filter(v => v.att === i.n);
+  const disk = i.orphan ? ORPHAN.disk : vols.reduce((a,v) => a + v.gb, 0);
+  const lines = envLogLines(e), last = lines.length ? lines[lines.length-1] : null;
+  const exp = !e ? '미배치 — 만료·자동 정지 정책이 적용되지 않습니다'
+    : (e.exp === '—' ? '없음' : `${e.exp} 후${e.expWarn ? ` · vCPU ${i.cpu} 반납 예정` : ''}`);
+  const share = (v, max) => `<span class="bar"><i class="${v/max>=.8?'hot':''}" style="width:${Math.min(100,v/max*100).toFixed(1)}%"></i></span>`;
+  const qrow = (k, v, max, unit) => `<div class="qrow" style="grid-template-columns:70px minmax(0,1fr) 120px"><span class="lb">${k}</span>${share(v, max)}<span class="vl">${fmt(v)}${unit} <em>/ ${fmt(max)}</em></span></div>`;
+  const u = e && e.usage;
+
+  const info = `<div class="sec"><div class="sec-head"><h2>기본 정보</h2></div><div class="card"><div class="card-body"><div class="kv">
+      <span class="k">환경</span><span class="v">${e ? `<a href="#" onclick="event.preventDefault();openEnv('${e.id}')">${esc(e.id)}</a>` : '미배치'}</span>
+      <span class="k">서버 타입</span><span class="v">${t ? t.label : esc(i.type)} <span class="dim">${esc(i.type)}</span>
+        ${i.orphan ? '' : `<button class="btn btn-sm btn-quiet rw" onclick="dlg('resize',{n:'${i.n}'})">크기 변경</button>`}</span>
+      <span class="k">용도</span><span class="v" style="font-family:inherit">${t ? esc(t.use) : '—'}</span>
+      <span class="k">할당 사양</span><span class="v">${i.cpu} vCPU · ${i.mem}GB · 디스크 ${disk}GB</span>
+      <span class="k">이미지</span><span class="v" style="font-family:inherit"><a href="#" onclick="event.preventDefault();openImage('${i.img}')">${esc(i.img)}</a>${imgBadge(i.img)}</span>
+      <span class="k">존</span><span class="v">${esc(i.be)}</span>
+      <span class="k adminonly">호스트</span><span class="v adminonly">${esc(hostOf(i))}</span>
+      <span class="k adminonly">백엔드 ID</span><span class="v adminonly">${e ? esc(e.iid) : '—'}</span>
+    </div></div></div></div>`;
+
+  const life = `<div class="sec"><div class="sec-head"><h2>수명</h2></div><div class="card"><div class="card-body"><div class="kv">
+      <span class="k">생성</span><span class="v">${lines.length ? `${lines[0].t} · ${esc(e.owner || '—')}` : '—'}</span>
+      <span class="k">최근 이벤트</span><span class="v" style="font-family:inherit;word-break:normal">${last ? `<span class="mono">${last.t}</span> ${esc(last.msg)}` : '—'}</span>
+      <span class="k">만료</span><span class="v" ${e && e.expWarn ? 'style="color:var(--warn)"' : ''}>${exp}</span>
+      <span class="k">자동 정지</span><span class="v">${e ? '2시간 유휴 시' : '적용 안 됨'}</span>
+      <span class="k">삭제 보호</span><span class="v">${e ? (e.prot ? '켜짐' : '꺼짐') : '—'}</span>
+    </div></div></div></div>`;
+
+  const access = i.orphan ? '' : `<div class="sec"><div class="sec-head"><h2>접속</h2></div><div class="card"><div class="card-body">
+      ${i.state === 'running'
+        ? `<div class="pre"><span class="t">ssh dev@${esc(i.fip || i.ip)}</span>
+             <button class="btn btn-sm btn-quiet" onclick="copy(event,'ssh dev@${esc(i.fip || i.ip)}')"><svg class="ic ic-sm"><use href="#i-copy"/></svg></button></div>
+           <p class="hint">${i.fip ? '공인 IP로 접속합니다.' : '공인 IP가 없어 사내망·VPN에서 내부 IP로 접속합니다.'} 브라우저 콘솔은 위 <b>콘솔</b> 버튼입니다.</p>`
+        : '<p class="hint" style="margin:0">정지된 인스턴스에는 접속할 수 없습니다. 시작하면 접속 정보가 나타납니다.</p>'}
+    </div></div></div>`;
+
+  const quota = (e || i.orphan) ? `<div class="sec"><div class="sec-head"><h2>쿼터 점유</h2><div class="sub">프로젝트 상한 대비</div></div><div class="card"><div class="card-body" style="padding:4px 14px">
+      ${qrow('vCPU', i.cpu, QMAX.cpu, '')}${qrow('메모리', i.mem, QMAX.mem, 'GB')}${qrow('디스크', disk, QMAX.disk, 'GB')}
+    </div><div class="card-foot">${i.orphan ? '고아 리소스입니다. 회수하기 전까지 쿼터를 점유합니다.'
+      : (i.state === 'stopped' ? '정지해도 vCPU·메모리·디스크 쿼터는 그대로 점유합니다. 쿼터를 비우려면 삭제하세요.' : '이 인스턴스가 차지하는 양입니다. 정지해도 줄지 않습니다.')}</div></div></div>` : '';
+
+  const usage = (u && !i.orphan) ? `<div class="sec"><div class="sec-head"><h2>실사용</h2><div class="sub">최근 7일 · 환경 기준</div></div>
+    <div class="card"><div class="card-body" style="padding:4px 14px">
+      <div class="usage"><span class="u-k">CPU</span>${sparkline(u.cpu)}<span class="u-v">${u.cpu[u.cpu.length-1]}%</span></div>
+      <div class="usage"><span class="u-k">메모리</span>${sparkline(u.mem)}<span class="u-v">${u.mem[u.mem.length-1]}%</span></div>
+    </div></div></div>` : '';
+
+  return `<div class="g2"><div>${info}${life}</div><div>${access}${quota}${usage}</div></div>`;
+}
+
+function iLink(i){
+  const e = ENVS.find(x => x.id === i.env);
+  const vols = volumes().filter(v => v.att === i.n);
+  const sgs = securityGroups().filter(g => g.shared || (e && g.n === 'sg-' + e.id));
+  const volRows = vols.length ? vols.map(v => `<tr>
+      <td class="name"><a href="#" onclick="event.preventDefault();openVol('${v.n}')">${esc(v.n)}</a></td>
+      <td class="num">${v.gb} GB</td><td class="dim">${v.kind}</td><td class="mono dim">${esc(v.dev || '—')}</td>
+      <td class="act"><button class="btn btn-sm rw" onclick="dlg('expandVol',{n:'${v.n}',gb:${v.gb}})">확장</button>
+        ${v.kind === '데이터' ? `<button class="btn btn-sm btn-quiet rw" onclick="dlg('detachVol',{n:'${v.n}'})">분리</button>` : ''}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="faint" style="text-align:center;padding:22px">연결된 볼륨이 없습니다</td></tr>';
+  return `<div class="sec"><div class="sec-head"><h2>볼륨</h2><div class="sub">${vols.length}개</div><div class="grow"></div>
+      ${i.orphan ? '' : `<button class="btn btn-sm rw" onclick="dlg('attachVol',{n:'${i.n}'})"><svg class="ic ic-sm"><use href="#i-plus"/></svg>볼륨 연결</button>`}</div>
+    <div class="card"><div class="tw"><table>
+      <thead><tr><th>이름</th><th class="num">크기</th><th>종류</th><th>장치</th><th></th></tr></thead><tbody>${volRows}</tbody></table></div>
+    <div class="card-foot">부팅 볼륨은 분리할 수 없습니다. 연결된 볼륨도 디스크 쿼터를 점유합니다.</div></div></div>
+
+  <div class="g2">
+    <div class="sec"><div class="sec-head"><h2>네트워크</h2></div><div class="card"><div class="card-body"><div class="kv">
+      <span class="k">내부 IP</span><span class="v">${esc(i.ip)}</span>
+      <span class="k">공인 IP</span><span class="v">${i.fip ? `${esc(i.fip)} <button class="btn btn-sm btn-quiet rw" onclick="dlg('releaseIP',{ip:'${i.fip}'})">해제</button>`
+        : `— ${i.orphan ? '' : `<button class="btn btn-sm btn-quiet rw" onclick="dlg('allocIP')">할당</button>`}`}</span>
+      <span class="k">네트워크</span><span class="v">${e ? esc(e.net) : '—'}</span>
+      <span class="k">키페어</span><span class="v">${e ? 'sh@laptop' : '—'}</span>
+    </div></div></div></div>
+    <div class="sec"><div class="sec-head"><h2>보안그룹</h2></div><div class="card"><div class="tw"><table>
+      <thead><tr><th>이름</th><th>규칙</th><th></th></tr></thead>
+      <tbody>${sgs.map(g => `<tr><td class="name">${esc(g.n)}${g.shared ? ' <span class="chip">공유</span>' : ''}</td><td class="mono dim">${esc(g.rules)}</td>
+        <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('editSG',{n:'${g.n}'})">규칙</button></td></tr>`).join('')}</tbody>
+    </table></div></div></div>
+  </div>`;
+}
+
+function iLog(i){
+  const e = ENVS.find(x => x.id === i.env), lines = envLogLines(e).slice(-6).reverse();
+  return `<div class="g2">
+    <div class="sec"><div class="sec-head"><h2>최근 로그</h2></div><div class="card"><div class="card-body">
+      <div class="pre block" style="min-height:120px">${i.state==='running'
+        ? '[방금] health check 통과\n[1분 전] 애플리케이션 프로세스 시작\n[2분 전] cloud-init 완료'
+        : '중지된 인스턴스는 로그를 표시하지 않습니다. 시작 후 다시 확인하세요.'}</div>
+    </div></div></div>
+    <div class="sec"><div class="sec-head"><h2>작업 이력</h2><div class="sub">환경 기준</div><div class="grow"></div>
+      <button class="btn btn-sm btn-quiet" onclick="go('activity')">활동 전체<svg class="ic ic-sm"><use href="#i-right"/></svg></button></div>
+      <div class="card"><div class="tw"><table><tbody>${lines.length
+        ? lines.map(l => `<tr><td class="mono dim" style="white-space:nowrap">${l.t}</td><td>${esc(l.msg)}</td></tr>`).join('')
+        : '<tr><td class="faint" style="text-align:center;padding:22px">기록이 없습니다</td></tr>'}</tbody></table></div></div></div>
+  </div>`;
 }
 
 /* ---------- 볼륨 화면 ---------- */
@@ -3786,8 +3898,8 @@ function instMenu(ev, n, state){
   if(!rowMenu){ rowMenu = document.createElement('div'); rowMenu.className = 'menu'; document.body.appendChild(rowMenu); }
   rowMenu.innerHTML = `
     ${meta.orphan ? '' : (state==='running'
-      ? `<button class="rw" onclick="dlg('restartEnv',{id:'${n}'})"><svg class="ic ic-sm"><use href="#i-retry"/></svg>재시작</button>
-         <button class="rw" onclick="dlg('stopEnv',{id:'${n}'})">정지</button>`
+      ? `<button class="rw" onclick="dlg('restartEnv',{id:envOf('${n}')})"><svg class="ic ic-sm"><use href="#i-retry"/></svg>재시작</button>
+         <button class="rw" onclick="dlg('stopEnv',{id:envOf('${n}')})">정지</button>`
       : `<button class="rw" onclick="dlg('startInst',{n:'${n}'})"><svg class="ic ic-sm"><use href="#i-play"/></svg>시작</button>`)}
     ${meta.orphan ? '' : `<button onclick="dlg('console',{n:'${n}'})"><svg class="ic ic-sm"><use href="#i-term"/></svg>콘솔</button>`}
     <div class="msep"></div>
@@ -4048,11 +4160,14 @@ dev@${c.id}:~$ <span style="background:#C9D6DF;color:#0D1216">&nbsp;</span></div
     b:`${fKv([['현재 상태','정지됨'],['쿼터','변화 없음 — 정지 중에도 vCPU·메모리·디스크를 계속 점유하고 있었습니다'],['예상 시간','40초 내외']])}`,
     f:fFoot('시작','',{then:`transition('${c.id}','starting',2600);`})}),
 
-  stopEnv: c => ({t:`${c.id} 정지`, w:480,
-    b:`${fBan('정지해도 <b>vCPU·메모리·디스크 쿼터는 그대로 점유합니다.</b> 쿼터를 비우려면 삭제하세요.')}
+  stopEnv: c => { const e = ENVS.find(x => x.id === c.id);
+    return ({t:`${c.id} 정지`, w:500,
+    b:`${fBan(e ? `정지해도 <b>vCPU ${e.cpu} · 메모리 ${e.mem}GB · 디스크 ${e.disk}GB</b>는 계속 쓰는 것으로 계산됩니다. 한동안 안 쓸 거라면 스냅샷을 만들고 삭제하면 쿼터가 돌아옵니다.`
+                 : '정지해도 <b>vCPU·메모리·디스크 쿼터는 그대로 점유합니다.</b> 쿼터를 비우려면 삭제하세요.')}
       ${fFld('실행 중인 세션','<div class="pre"><span class="t">SSH 1개 · 09-19 09:02 접속</span></div>','정지하면 세션이 끊깁니다.')}
-      <p class="hint">반납되는 쿼터 없음 — <button type="button" class="btn btn-sm btn-quiet" style="padding:0;text-decoration:underline" onclick="dlgClose();openDel('${c.id}')">대신 삭제하기</button></p>`,
-    f:fFoot('정지','',{then:`transition('${c.id}','stopping',1800);`})}),
+      ${e ? `<p class="hint">대신: <button type="button" class="btn btn-sm btn-quiet" style="padding:0;text-decoration:underline" onclick="dlgClose();dlg('snapThenDelete',{id:'${c.id}'})">스냅샷 후 삭제</button>
+        <button type="button" class="btn btn-sm btn-quiet" style="padding:0 0 0 10px;text-decoration:underline" onclick="dlgClose();openDel('${c.id}')">바로 삭제</button></p>` : ''}`,
+    f:fFoot('그냥 정지','',{then:`transition('${c.id}','stopping',1800);`})}); },
 
   restartEnv: c => ({t:`${c.id} 재시작`, w:480,
     b:`${fFld('방식', fOpt([['정상 재시작','ACPI 종료 후 부팅'],['강제 재시작','전원 차단']]))}
@@ -4531,7 +4646,7 @@ spec:
     b:`${fFld('이름', fIn('', 'web-01'),'같은 이름의 환경이 함께 만들어집니다.')}
       ${fFld('존', fOpt([['kr-a','표준 존 · 용량 94%'],['kr-b','보조 존 · 용량 41%']],1),'볼륨과 환경 연결은 같은 존 안에서만 가능합니다.')}
       ${fFld('이미지', fOpt([['ubuntu-24.04-server','공용'],['ubuntu-22.04-server','공용'],['rocky-9','공용'],['go-dev-base','내 이미지']],0))}
-      ${fFld('서버 타입', fOpt([['S','2 vCPU · 4GB'],['M','4 vCPU · 8GB'],['L','8 vCPU · 16GB']],1))}
+      ${fFld('서버 타입', fOpt(['std.s','std.m','std.l'].map(k => [SERVER_TYPES[k].label, `${SERVER_TYPES[k].cpu} vCPU · ${SERVER_TYPES[k].mem}GB · ${SERVER_TYPES[k].use}`]),1))}
       ${fFld('부팅 디스크', fIn('50'),'GB. 생성 후 확장만 가능합니다.')}
       ${fFld('네트워크', fOpt([['새 전용 네트워크','대역 자동 할당'],['platform-shared','기존 공유망'],['dev-sandbox-net','기존 환경망']],0))}
       ${fFld('공인 IP', fOpt([['할당 안 함'],['할당','쿼터 3 / 4']],0))}
@@ -4545,13 +4660,15 @@ spec:
       <p class="hint">쿼터 변화 없음 — 정지 중에도 vCPU·메모리·디스크를 계속 점유하고 있었습니다.</p>`,
     f:fFoot('시작','인스턴스를 시작합니다')}),
 
-  resize: c => ({t:`크기 변경 — ${c.n}`, w:540,
+  resize: c => { const i = instances().find(x => x.n === c.n) || {cpu:4, mem:8, type:'std.m'};
+    return ({t:`크기 변경 — ${c.n}`, w:580,
     b:`${fBan('크기를 바꾸려면 인스턴스를 정지해야 합니다. 정지 → 변경 → 시작 순으로 진행됩니다.')}
-      ${fFld('현재', `<div class="pre"><span class="t">std.m — 4 vCPU · 8GB</span></div>`)}
-      ${fFld('변경', fOpt([['S','2 vCPU · 4GB'],['M','4 vCPU · 8GB · 현재'],['L','8 vCPU · 16GB'],['메모리 L','8 vCPU · 64GB']],2))}
-      ${fFld('디스크', fKv([['부팅 볼륨','50 GB — 변경되지 않음']]),'디스크는 볼륨 확장으로만 늘립니다.')}
-      <p class="hint">변경 후 쿼터 vCPU <b class="mono">${quotaNow().cpu} → ${quotaNow().cpu+4}</b> / ${QMAX.cpu}</p>`,
-    f:fFoot('변경','정지 후 크기를 변경합니다')}),
+      ${fFld('현재', `<div class="pre"><span class="t">${i.type} — ${i.cpu} vCPU · ${i.mem}GB</span></div>`)}
+      ${fFld('변경', `<div class="opts" id="rzOpts" data-cpu="${i.cpu}" data-mem="${i.mem}">${Object.keys(SERVER_TYPES).map(k => { const T = SERVER_TYPES[k];
+        return `<button class="opt" data-code="${k}" aria-pressed="${k===i.type}" onclick="one(this);updateResizeImpact()">${T.label}<span class="o2">${T.cpu} vCPU · ${T.mem}GB${k===i.type?' · 현재':''}</span><span class="o2" style="font-family:inherit">${esc(T.use)}</span></button>`; }).join('')}</div>`)}
+      ${fFld('디스크', fKv([['부팅 볼륨','변경되지 않음']]),'디스크는 볼륨 확장으로만 늘립니다.')}
+      <div id="rzImpact">${resizeImpact(i, i.type).html}</div>`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button><button class="btn btn-pri" id="rzOk" onclick="doResize('${c.n}')">변경</button>`}); },
 
   assignEnv: c => ({t:`환경에 배치 — ${c.n}`, w:520,
     b:`${fFld('배치할 환경', fOpt([['새 환경으로','scratch-01 이름 사용'],['dev-sandbox','기존 환경에 추가'],['team-k8s','기존 환경에 추가']],0))}
@@ -4856,10 +4973,64 @@ function wireLoose(root){
 wireLoose();
 
 function boot(){
-  const steps = [renderEnvList, renderInstances, renderVolumes, renderNetwork, renderTpl, renderAllQuota, renderSnapshots, renderImageQuota, renderQuotaPage, renderOnboard, applyDashboard, renderTeamPending, wireLoose, makeRowsFocusable, responsify, renderProjectPickerQuota, () => setMode('user')];
+  const steps = [renderEnvList, renderInstances, renderVolumes, renderNetwork, renderTpl, renderAllQuota, renderSnapshots, renderImageQuota, renderQuotaPage, renderOnboard, applyDashboard, renderTeamPending, wireLoose, makeRowsFocusable, responsify, renderProjectPickerQuota, renderSizeOpts, renderServerTypes, renderImageBadges, () => setMode('user')];
   steps.forEach(fn => { try { fn(); } catch(err){ console.error('boot step failed', err); } });
 }
 boot();
+
+/* ---------- 서버 타입(플레이버) · 이미지 배지 ---------- */
+const envOf = n => (instances().find(x => x.n === n) || {}).env || n;
+function renderSizeOpts(){
+  const el = document.getElementById('wzSizeOpts'); if(!el) return;
+  el.innerHTML = ['std.s','std.m','std.l'].map(k => { const T = SERVER_TYPES[k];
+    return `<button class="opt" data-cpu="${T.cpu}" data-mem="${T.mem}" ${k==='std.m'?'aria-pressed="true"':''} onclick="pickSize(this)">${T.label}<span class="o2">${T.cpu} vCPU · ${T.mem}GB</span><span class="o2" style="font-family:inherit">${esc(T.use)}</span></button>`; }).join('');
+}
+function renderServerTypes(){
+  const el = document.getElementById('typeRows'); if(!el) return;
+  el.innerHTML = Object.entries(SERVER_TYPES).map(([code, T]) => `<tr><td class="name">${T.label}</td><td class="mono dim">${code}</td>
+    <td class="num">${T.cpu}</td><td class="num">${T.mem} GB</td><td class="dim">${esc(T.use)}</td><td class="mono dim">${T.os}</td>
+    <td class="${T.cs ? 'mono dim' : 'faint'}">${T.cs || '—'}</td><td class="dim">${T.scope}</td>
+    <td class="act"><button class="btn btn-sm btn-quiet" onclick="openType()">편집</button></td></tr>`).join('');
+}
+function renderImageBadges(){
+  document.querySelectorAll('[data-view="images"] tbody tr').forEach(r => {
+    const c = r.querySelector('td.name'); if(!c) return;
+    c.querySelectorAll('[data-upd]').forEach(x => x.remove());
+    if(IMAGE_UPDATE.has(c.childNodes[0].textContent.trim()))
+      c.insertAdjacentHTML('beforeend', ' <span class="chip w" data-upd title="이 이미지에 보안 업데이트가 있습니다. 새로 만들 때는 최신 이미지를 권장합니다.">보안 업데이트</span>');
+  });
+}
+function resizeImpact(i, code){
+  const T = SERVER_TYPES[code], imp = quotaImpact({cpu:T.cpu - i.cpu, mem:T.mem - i.mem});
+  if(imp.over) imp.html += `<p class="hint w">쿼터가 부족합니다. <button type="button" class="btn btn-sm btn-quiet" onclick="dlgClose();go('quota')">쿼터 정리</button>
+    <button type="button" class="btn btn-sm btn-quiet" onclick="dlgClose();dlg('quotaRequest',{item:'cpu'})">쿼터 상향 요청</button></p>`;
+  return imp;
+}
+function updateResizeImpact(){
+  const box = document.getElementById('rzOpts'), sel = box && box.querySelector('.opt[aria-pressed="true"]'); if(!sel) return;
+  const imp = resizeImpact({cpu:+box.dataset.cpu, mem:+box.dataset.mem}, sel.dataset.code);
+  document.getElementById('rzImpact').innerHTML = imp.html;
+  document.getElementById('rzOk').disabled = imp.over;
+}
+function doResize(n){
+  const i = instances().find(x => x.n === n); if(!i) return;
+  const sel = document.querySelector('#rzOpts .opt[aria-pressed="true"]'); if(!sel) return;
+  const code = sel.dataset.code, T = SERVER_TYPES[code], e = ENVS.find(x => x.id === i.env);
+  dlgClose();
+  if(T.cpu === i.cpu && T.mem === i.mem){ toast('변경할 내용이 없습니다'); return; }
+  const apply = () => {
+    if(e){
+      e.cpu += T.cpu - i.cpu; e.mem += T.mem - i.mem;
+      if(e.nodes){ const nd = e.nodes.find(x => x.n === n); if(nd) nd.spec = `${T.cpu} vCPU · ${T.mem}GB`; }
+      else e.flavor = `${code} — ${(e.be === 'OpenStack' ? T.os : T.cs) || T.os}`;
+    } else {
+      const x = EXTRA_INSTANCES.find(y => y.n === n); if(x){ x.type = code; x.cpu = T.cpu; x.mem = T.mem; }
+    }
+    refreshAll(); toast(`${n} 을(를) ${T.label} 크기로 변경했습니다`);
+  };
+  if(e && e.state === 'running') transition(e.id, 'stopping', 1600, () => { apply(); transition(e.id, 'starting', 2200); });
+  else apply();
+}
 
 /* ================= 개발용 자체 검증 — 콘솔에서 verifyQuota() 실행 ================= */
 function verifyQuota(){
