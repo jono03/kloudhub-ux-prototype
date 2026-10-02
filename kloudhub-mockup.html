@@ -108,9 +108,26 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none;pad
 body[data-mode="admin"] .top{box-shadow:inset 0 -3px 0 var(--sel)}
 body[data-mode="admin"] #adminEntry{display:none}
 body[data-mode="admin"] #wzBtn{display:none}
-.sidefoot{margin-top:auto;padding:11px 9px 2px;border-top:1px solid var(--line)}
-.sidefoot .l{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);margin-bottom:5px}
-.sidefoot .l b{font-family:"IBM Plex Mono",monospace;font-weight:500;color:var(--text)}
+.sidefoot{margin-top:auto;padding:7px 6px 2px;border-top:1px solid var(--line)}
+.side-projwrap{position:relative}
+.side-projbtn{display:flex;align-items:center;gap:7px;width:100%;padding:7px 8px;border-radius:var(--r);font-size:13px;color:var(--text-2);text-align:left}
+.side-projbtn:hover,.side-projwrap:hover .side-projbtn{background:var(--surface-2);color:var(--text)}
+.side-projbtn b{font-weight:500;color:var(--text)}
+.side-projbtn .chev-r{margin-left:auto;color:var(--text-3);transform:rotate(-90deg)}
+.side-flyout{display:none;position:fixed;left:8px;bottom:60px;width:250px;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow-lg);padding:5px;z-index:50}
+.sf-sub{position:relative}
+.sf-subrow{display:flex;align-items:center;gap:8px;width:100%;padding:6px 9px;border-radius:var(--r);font-size:13px;color:var(--text);cursor:default}
+.sf-sub:hover > .sf-subrow{background:var(--surface-2)}
+.sf-subrow .chev-r{margin-left:auto;color:var(--text-3)}
+.sf-submenu{display:none;position:absolute;left:100%;bottom:-6px;min-width:200px;margin-left:2px;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow-lg);padding:5px}
+.sf-submenu::before{content:"";position:absolute;left:-6px;top:0;bottom:0;width:6px}
+.sf-sub:hover > .sf-submenu{display:block}
+.side-flyout button,.side-flyout .sf-projrow{display:flex;align-items:center;gap:8px;width:100%;padding:6px 9px;border-radius:var(--r);font-size:13px;color:var(--text);text-align:left}
+.side-flyout button:hover,.side-flyout .sf-projrow:hover{background:var(--surface-2)}
+.sf-cur{padding:8px 9px 10px}
+.sf-name{font-size:13px;font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between}
+.sf-projrow{justify-content:space-between;cursor:pointer}
+.sf-projrow .pc{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--text-3)}
 .main{flex:1;min-width:0;width:100%;padding:20px 28px 72px}
 .crumb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-3);margin-bottom:7px}
 .crumb .sp{opacity:.6}
@@ -265,6 +282,8 @@ select.sel{padding:7px 9px;border:1px solid var(--line-strong);border-radius:var
 .menu button:hover{background:var(--surface-2)}
 .menu button.danger{color:var(--err)}
 .menu .msep{height:1px;background:var(--line);margin:4px 0}
+.menu button:disabled{color:var(--text-3);cursor:not-allowed}
+.menu button:disabled:hover{background:none}
 .menu .mlbl{padding:6px 9px 4px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3)}
 .menu button[aria-checked="true"]::after{content:"✓";margin-left:auto;color:var(--sel)}
 
@@ -427,17 +446,6 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     <svg class="ic"><use href="#i-menu"/></svg></button>
   <div class="logo"><span class="mark">K</span><span class="name">KloudHub</span></div>
   <div class="vr"></div>
-  <div style="position:relative">
-    <button class="picker" onclick="menu(event,'mProj')">프로젝트 <b class="mono">platform</b><svg class="ic ic-sm"><use href="#i-chev"/></svg></button>
-    <div class="menu" id="mProj" style="top:34px;left:0;min-width:230px">
-      <div class="mlbl">프로젝트</div>
-      <div id="mProjList"></div>
-      <div class="msep"></div>
-      <button class="rw" onclick="dlg('addProject')"><svg class="ic ic-sm"><use href="#i-plus"/></svg>새 프로젝트</button>
-      <button onclick="closeMenus();go('projects')"><svg class="ic ic-sm"><use href="#i-folder"/></svg>내 프로젝트</button>
-      <button class="adminonly" onclick="closeMenus();go('admin-projects')"><svg class="ic ic-sm"><use href="#i-shield"/></svg>프로젝트 관리</button>
-    </div>
-  </div>
   <div style="position:relative" class="picker-wrap">
     <button class="picker z" onclick="menu(event,'mZone')">존 <b class="mono">전체</b><svg class="ic ic-sm"><use href="#i-chev"/></svg></button>
     <div class="menu" id="mZone" style="top:34px;left:0">
@@ -504,14 +512,6 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
       <button class="navitem sub" data-nav="images" onclick="go('images')"><svg class="ic"><use href="#i-img"/></svg>이미지<span class="cnt">7</span></button>
       <button class="navitem sub" data-nav="snapshots" onclick="go('snapshots')"><svg class="ic"><use href="#i-cam"/></svg>스냅샷<span class="cnt">3</span></button>
     </div>
-
-    <div class="navsep"></div>
-    <button class="navitem" data-nav="quota" onclick="go('quota')"><svg class="ic"><use href="#i-gauge"/></svg>쿼터<span class="cnt"></span></button>
-    <button class="navitem" data-nav="activity" onclick="go('activity')"><svg class="ic"><use href="#i-pulse"/></svg>활동<span class="cnt">2</span></button>
-
-    <div class="navsep"></div>
-    <button class="navitem" data-nav="team" onclick="go('team')"><svg class="ic"><use href="#i-users"/></svg>팀</button>
-    <button class="navitem" data-nav="settings" onclick="go('settings')"><svg class="ic"><use href="#i-cog"/></svg>설정</button>
   </div>
 
   <div id="navAdmin" hidden>
@@ -528,7 +528,33 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     <button class="navitem" data-nav="admin-audit" onclick="go('admin-audit')"><svg class="ic"><use href="#i-book"/></svg>감사 로그<span class="cnt">7</span></button>
   </div>
 
-  <div class="sidefoot"></div>
+  <div class="sidefoot">
+    <div class="side-projwrap" onmouseenter="sfShow()" onmouseleave="sfHideDelayed()">
+      <button class="side-projbtn" onclick="go('quota')">
+        <svg class="ic ic-sm"><use href="#i-folder"/></svg>
+        <span>프로젝트 <b class="mono" id="sideProjName">platform</b></span>
+        <svg class="ic ic-sm chev-r"><use href="#i-chev"/></svg>
+      </button>
+      <div class="side-flyout" id="sideFlyout" onmouseenter="sfShow()" onmouseleave="sfHideDelayed()">
+        <div class="mlbl">현재 프로젝트</div>
+        <div class="sf-cur">
+          <div class="sf-name" id="sfCurName">platform <span class="mono faint" id="sfCurPct">88%</span></div>
+          <div id="sfCurQuota"></div>
+        </div>
+        <button onclick="sfHide();go('quota')"><svg class="ic ic-sm"><use href="#i-gauge"/></svg>쿼터</button>
+        <button onclick="sfHide();go('activity')"><svg class="ic ic-sm"><use href="#i-pulse"/></svg>활동<span class="cnt" id="sfActivityCnt">2</span></button>
+        <button onclick="sfHide();go('team')"><svg class="ic ic-sm"><use href="#i-users"/></svg>팀</button>
+        <button onclick="sfHide();go('settings')"><svg class="ic ic-sm"><use href="#i-cog"/></svg>설정</button>
+        <div class="msep"></div>
+        <div class="sf-sub">
+          <div class="sf-subrow" tabindex="0"><svg class="ic ic-sm"><use href="#i-folder"/></svg>다른 프로젝트<svg class="ic ic-sm chev-r"><use href="#i-right"/></svg></div>
+          <div class="sf-submenu"><div class="mlbl">프로젝트 선택</div><div id="sfProjList"></div></div>
+        </div>
+        <div class="msep"></div>
+        <button class="rw" onclick="sfHide();dlg('addProject')"><svg class="ic ic-sm"><use href="#i-plus"/></svg>새 프로젝트</button>
+      </div>
+    </div>
+  </div>
 </nav>
 
 <main class="main" id="main" tabindex="-1">
@@ -884,7 +910,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
         <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button> <button class="btn btn-sm btn-quiet rw" onclick="dlg('imageShare',{name:'data-etl-base'})"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
       <tr><td class="name">go-dev-base <span class="chip">내 이미지</span></td><td class="dim">dev-sandbox 에서 생성</td><td class="dim">Ubuntu 24.04 + Go</td><td class="num">12 GB</td><td class="dim mono">kr-a</td><td class="dim">나만</td><td class="dim mono">21일</td>
         <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button> <button class="btn btn-sm btn-quiet rw" onclick="dlg('imageShare',{name:'go-dev-base'})"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>
-      <tr><td class="name">pg16-seeded <span class="chip w">승인 대기</span></td><td class="dim">pg-staging 에서 생성</td><td class="dim">Ubuntu 24.04 + PG16</td><td class="num">6 GB</td><td class="dim mono">kr-a</td><td class="dim">공용 요청</td><td class="dim mono">30일</td>
+      <tr id="imgPgRow"><td class="name">pg16-seeded <span class="chip w">승인 대기</span></td><td class="dim">pg-staging 에서 생성</td><td class="dim">Ubuntu 24.04 + PG16</td><td class="num">6 GB</td><td class="dim mono">kr-a</td><td class="dim">공용 요청</td><td class="dim mono">30일</td>
         <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('imageShare',{name:'pg16-seeded'})">요청 취소</button> <span class="slot"></span></td></tr>
       <tr><td class="name">team-base <span class="chip">프로젝트</span></td><td class="dim">dkim 가 공유</td><td class="dim">Ubuntu 22.04 + Python</td><td class="num">26 GB</td><td class="dim mono">kr-b</td><td class="dim">프로젝트</td><td class="dim mono">무기한</td>
         <td class="act"><button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button> <span class="slot"></span></td></tr>
@@ -1251,7 +1277,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
 
   <div class="sec stats">
     <div class="stat"><div class="k">프로젝트</div><div class="v">5</div><div class="d">활성 3 · 유휴 2</div></div>
-    <div class="stat"><div class="k">승인 대기</div><div class="v">1</div><div class="d w">쿼터 상향 요청</div></div>
+    <div class="stat"><div class="k">승인 대기</div><div class="v" id="admPendV">1</div><div class="d w" id="admPendD">프로젝트 생성 승인 1</div></div>
     <div class="stat"><div class="k">조직 vCPU</div><div class="v">331<small>/400</small></div><div class="d">83%</div></div>
     <div class="stat"><div class="k">조직 디스크</div><div class="v">5.8<small>/10 TB</small></div><div class="d">57%</div></div>
   </div>
@@ -1260,16 +1286,16 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
     <button class="filter" aria-pressed="true" onclick="pressOnly(this)">전체 5</button>
     <button class="filter" aria-pressed="false" onclick="pressOnly(this)">활성 3</button>
     <button class="filter" aria-pressed="false" onclick="pressOnly(this)">유휴 2</button>
-    <button class="filter" aria-pressed="false" onclick="pressOnly(this)">승인 대기 1</button>
+    <button class="filter" id="admPendFilter" aria-pressed="false" onclick="pressOnly(this)">승인 대기 1</button>
   </div>
 
   <div class="card"><div class="tw"><table>
     <thead><tr><th>이름</th><th>용도</th><th>만든 이</th><th class="num">멤버</th><th class="num">환경</th><th class="num">vCPU</th><th class="num">디스크</th><th>백엔드 매핑</th><th>상태</th><th></th></tr></thead>
-    <tbody>
+    <tbody id="admProjRows">
       <tr><td class="name">platform</td><td class="dim">개발팀</td><td class="dim">sh</td><td class="num">4</td><td class="num">7</td><td class="num" id="adminProjCpu">35 / 40</td><td class="num" id="adminProjDisk">1338 / 1536</td><td class="dim mono">OS platform · CS platform</td><td><span class="st run">활성</span></td><td class="act"><button class="btn btn-sm btn-quiet" onclick="dlg('editProject',{name:'platform'})">편집</button></td></tr>
       <tr><td class="name">infra</td><td class="dim">개발팀</td><td class="dim">jlee</td><td class="num">6</td><td class="num">3</td><td class="num">9 / 16</td><td class="num">180 / 512</td><td class="dim mono">OS infra</td><td><span class="st run">활성</span></td><td class="act"><button class="btn btn-sm btn-quiet" onclick="dlg('editProject',{name:'infra'})">편집</button></td></tr>
       <tr><td class="name">team-web</td><td class="dim">교육</td><td class="dim">dkim</td><td class="num">48</td><td class="num">31</td><td class="num">60 / 64</td><td class="num">1900 / 2048</td><td class="dim mono">OS team-web</td><td><span class="st warn">쿼터 94%</span></td><td class="act"><button class="btn btn-sm btn-quiet" onclick="dlg('editProject',{name:'team-web'})">편집</button></td></tr>
-      <tr><td class="name">team-search <span class="chip w">승인 대기</span></td><td class="dim">실험</td><td class="dim">dkim</td><td class="num">2</td><td class="num faint">0</td><td class="num">— / 32</td><td class="num">— / 512</td><td class="faint">생성 대기</td><td><span class="st warn">쿼터 상향 요청</span></td>
+      <tr id="admTeamSearchRow"><td class="name">team-search <span class="chip w">승인 대기</span></td><td class="dim">실험</td><td class="dim">dkim</td><td class="num">2</td><td class="num faint">0</td><td class="num">— / 32</td><td class="num">— / 512</td><td class="faint">생성 대기</td><td><span class="st warn">쿼터 상향 요청</span></td>
         <td class="act"><button class="btn btn-sm btn-pri" onclick="dlg('reviewProject',{name:'team-search'})">검토</button></td></tr>
       <tr><td class="name faint">team-legacy</td><td class="dim">실험</td><td class="dim">ypark</td><td class="num faint">1</td><td class="num faint">0</td><td class="num faint">0 / 16</td><td class="num faint">0 / 512</td><td class="dim mono">OS team-legacy</td><td><span class="st stop">유휴 64일</span></td>
         <td class="act"><button class="btn btn-sm btn-warn" onclick="dlg('archiveProject',{name:'team-legacy'})">아카이브</button></td></tr>
@@ -1303,7 +1329,7 @@ body:not([data-role="admin"]) .adminonly{display:none !important}
       <tr><td class="name">ubuntu-24.04-server</td><td class="dim">관리자 등록</td><td class="dim">Ubuntu 24.04 LTS</td><td class="num">2.4 GB</td><td class="mono dim">img-ub2404</td><td class="mono dim">tpl-ub2404</td><td class="dim">공용</td><td><span class="st run">최신</span></td><td class="act"><button class="btn btn-sm btn-quiet">편집</button></td></tr>
       <tr><td class="name">ubuntu-22.04-server</td><td class="dim">관리자 등록</td><td class="dim">Ubuntu 22.04 LTS</td><td class="num">2.2 GB</td><td class="mono dim">img-ub2204</td><td class="mono dim">tpl-ub2204</td><td class="dim">공용</td><td><span class="st warn">보안 업데이트 있음</span></td><td class="act"><button class="btn btn-sm btn-quiet">편집</button></td></tr>
       <tr><td class="name">python-3.12-base</td><td class="dim">관리자 등록</td><td class="dim">Ubuntu 22.04 + Python</td><td class="num">9.8 GB</td><td class="faint">—</td><td class="mono dim">tpl-py312</td><td class="dim">공용</td><td><span class="st run">최신</span></td><td class="act"><button class="btn btn-sm btn-quiet">편집</button></td></tr>
-      <tr><td class="name">pg16-seeded <span class="chip w">승인 대기</span></td><td class="dim">sh · pg-staging</td><td class="dim">Ubuntu 24.04 + PG16</td><td class="num">6 GB</td><td class="mono dim">img-usr-4c21</td><td class="faint">—</td><td class="dim">공용 요청</td><td><span class="st warn">검토 필요</span></td>
+      <tr id="admImgPgRow"><td class="name">pg16-seeded <span class="chip w">승인 대기</span></td><td class="dim">sh · pg-staging</td><td class="dim">Ubuntu 24.04 + PG16</td><td class="num">6 GB</td><td class="mono dim">img-usr-4c21</td><td class="faint">—</td><td class="dim">공용 요청</td><td><span class="st warn">검토 필요</span></td>
         <td class="act"><button class="btn btn-sm btn-pri" onclick="dlg('approveImage',{name:'pg16-seeded'})">검토</button></td></tr>
       <tr><td class="name">team-base</td><td class="dim">dkim · data-etl</td><td class="dim">Ubuntu 22.04 + Python</td><td class="num">26 GB</td><td class="faint">—</td><td class="mono dim">tpl-usr-88a0</td><td class="dim">프로젝트 platform</td><td><span class="st run">정상</span></td><td class="act"><button class="btn btn-sm btn-quiet">편집</button></td></tr>
       <tr><td class="name">data-etl-base</td><td class="dim">sh · data-etl</td><td class="dim">Ubuntu 22.04 + Python</td><td class="num">24 GB</td><td class="faint">—</td><td class="mono dim">tpl-usr-3f19</td><td class="dim">나만</td><td><span class="st run">정상</span></td><td class="act"><button class="btn btn-sm btn-quiet">편집</button></td></tr>
@@ -1644,6 +1670,8 @@ runcmd:
       <div id="wzPlan" class="card" style="margin-top:16px;overflow:hidden"></div>
     </div>
 
+    <div class="m-body" id="wz2k" hidden></div>
+
     <div class="m-foot">
       <span class="delta" id="delta"></span>
       <div class="grow"></div>
@@ -1727,27 +1755,20 @@ runcmd:
     <div class="m-head"><h2>환경 연결</h2><div class="grow"></div><button class="btn btn-sm btn-quiet" onclick="closeLink()">닫기</button></div>
     <div class="m-body">
       <div class="frow"><div class="lbl" id="linkFrom">접근할 환경</div>
-        <div class="opts">
-          <button class="opt" aria-pressed="true" onclick="one(this)">pg-staging<span class="o2">PostgreSQL 16 · zone-a</span></button>
-          <button class="opt" aria-pressed="false" onclick="one(this)">team-k8s<span class="o2">Kubernetes · zone-a</span></button>
-          <button class="opt" disabled>data-etl<span class="o2">zone-b · 연결 불가</span></button>
-        </div></div>
-      <div class="frow"><div class="lbl">허용 포트</div><input type="text" value="5432">
+        <div class="opts" id="linkTargets"></div>
+        <p class="hint" id="linkNote"></p></div>
+      <div class="frow"><div class="lbl">허용 포트</div><input type="text" id="linkPort" value="5432">
         <p class="hint">쉼표로 여러 개, 범위는 하이픈. 관리자 정책상 전체 포트 허용은 불가합니다.</p></div>
       <div class="frow"><div class="lbl">방향</div>
-        <div class="opts">
+        <div class="opts" id="linkDir">
           <button class="opt" aria-pressed="true" onclick="one(this)">단방향</button>
           <button class="opt" aria-pressed="false" onclick="one(this)">양방향</button>
         </div></div>
       <div class="frow" style="margin-bottom:0"><div class="lbl">적용 방식</div>
-        <div class="kv">
-          <span class="k">적용 방식</span><span class="v">양쪽 네트워크에 인바운드 규칙 추가</span>
-          <span class="k">이름 해석</span><span class="v">pg-staging.env.acme.internal</span>
-          <span class="k">제약</span><span class="v">같은 존의 환경끼리만 가능</span>
-        </div></div>
+        <div class="kv" id="linkKv"></div></div>
     </div>
     <div class="m-foot"><div class="grow"></div><button class="btn" onclick="closeLink()">취소</button>
-      <button class="btn btn-pri" onclick="closeLink();toast('환경을 연결했습니다')">연결</button></div>
+      <button class="btn btn-pri" id="linkOk" onclick="doLink()">연결</button></div>
   </div>
 </div>
 
@@ -1942,7 +1963,7 @@ const typeByCpuMem = (cpu, mem) => Object.keys(SERVER_TYPES).find(k => SERVER_TY
 const IMAGE_UPDATE = new Set(['ubuntu-22.04-server']);
 
 function quotaNow(){
-  const live = ENVS.filter(e => e.state !== 'failed');
+  const live = ENVS.filter(e => e.state !== 'failed' && !e.addon);
   const sum = k => live.reduce((a,e) => a + (e[k]||0), 0);
   const envDisk = sum('disk');
   const volDisk = EXTRA_VOLUMES.reduce((a,v) => a + v.gb, 0);
@@ -2189,8 +2210,9 @@ function renderQuotaRequests(){
   const rows = document.getElementById('qRequestRows');
   const foot = document.getElementById('qRequestFoot');
   if(!rows) return;
+  const stTxt = {pending:'<span class="st warn">검토 중</span>', approved:'<span class="st run">승인됨</span>', rejected:'<span class="st err">반려됨</span>'};
   rows.innerHTML = QUOTA_REQUESTS.map(r => `<tr><td class="name">${r.item}</td><td class="mono">+${r.amount}${r.unit}</td>
-    <td class="dim">${r.period}</td><td class="dim">${esc(r.reason)||'—'}</td><td><span class="st warn">검토 중</span></td></tr>`).join('');
+    <td class="dim">${r.period}</td><td class="dim">${esc(r.reason)||'—'}</td><td>${stTxt[r.status]}</td></tr>`).join('');
   if(foot) foot.style.display = QUOTA_REQUESTS.length ? 'none' : '';
 }
 function renderQuotaPage(){ renderReclaim(); renderUpcoming(); renderMemberAlloc(); renderQuotaRequests(); }
@@ -2206,16 +2228,10 @@ function renderSnapshots(){
     : '<tr><td colspan="8" class="faint" style="text-align:center;padding:24px">스냅샷이 없습니다</td></tr>';
 }
 function renderProjectPickerQuota(){
-  const el = document.getElementById('mProjList'); if(!el) return;
-  const u = quotaNow();
-  const proj = [
-    {n:'platform', checked:true, p: u.cpu/QMAX.cpu},
-    {n:'infra', checked:false, p: 9/16},
-    {n:'team-web', checked:false, p: 60/64}
-  ];
-  el.innerHTML = proj.map(p => `<button aria-checked="${p.checked}" onclick="closeMenus();${p.checked?'':`toast('${p.n}으로 전환했습니다')`}" style="flex-direction:column;align-items:stretch;gap:4px">
-    <span style="display:flex;justify-content:space-between;width:100%">${p.n}<span class="mono faint" style="font-size:11px">${Math.round(p.p*100)}%</span></span>
-    <span class="bar thin"><i class="${p.p>=.8?'hot':''}" style="width:${Math.min(100,p.p*100).toFixed(1)}%"></i></span></button>`).join('');
+  const el = document.getElementById('sfProjList'); if(!el) return;
+  const other = [{n:'infra', p: 9/16}, {n:'team-web', p: 60/64}];
+  el.innerHTML = other.map(p => `<div class="sf-projrow" onclick="closeMenus();sfHide();toast('${p.n}으로 전환했습니다')">
+    <span>${p.n}</span><span class="pc" ${p.p>=.8?'style="color:var(--warn)"':''}>${Math.round(p.p*100)}%</span></div>`).join('');
 }
 function renderImageQuota(){
   const el = document.getElementById('imgQuota'); if(!el) return;
@@ -2227,6 +2243,7 @@ function renderImageQuota(){
 /* 회수 대상: 원본 리소스를 실제로 제거해 쿼터 막대가 즉시 줄어들게 함 */
 function reclaimOrphan(){
   ORPHAN.cpu = 0; ORPHAN.mem = 0; ORPHAN.disk = 0;
+  for(let k = EXTRA_INSTANCES.length - 1; k >= 0; k--) if(EXTRA_INSTANCES[k].orphan) EXTRA_INSTANCES.splice(k, 1);
   const i = ENVS.findIndex(e => e.state === 'failed');
   if(i > -1) ENVS.splice(i, 1);
   refreshAll(); toast('고아 리소스를 회수했습니다');
@@ -2243,6 +2260,8 @@ function resolveVolumeTarget(n){
     const base = n.slice(0, -5).replace(/-0$/, '');
     const e = ENVS.find(x => !x.nodes && x.id === base);
     if(e) return {type:'env', gb:e.disk, ref:e};
+    const ne = ENVS.find(x => x.nodes && x.nodes.some(nd => nd.n + '-root' === n));
+    if(ne) return {type:'node', gb:(volumes().find(x => x.n === n) || {}).gb || 50, ref:ne};
   }
   return {type:'unknown', gb:50, ref:null};
 }
@@ -2260,6 +2279,7 @@ function doExpandVol(n){
   const t = resolveVolumeTarget(n);
   if(t.type === 'extra') t.ref.gb = Math.max(t.ref.gb, newGb);
   else if(t.type === 'env') t.ref.disk = Math.max(t.ref.disk, newGb);
+  else if(t.type === 'node') t.ref.disk += Math.max(0, newGb - t.gb);
   dlgClose(); refreshAll();
   toast(`${n} 을(를) 확장했습니다`);
 }
@@ -2330,8 +2350,8 @@ function submitQuotaRequest(){
   const item = itemBtn ? itemBtn.textContent.trim() : 'vCPU';
   const unit = itemBtn ? itemBtn.dataset.unit : '';
   const period = periodBtn ? periodBtn.childNodes[0].textContent.trim() : '영구';
-  QUOTA_REQUESTS.unshift({item, amount, unit, period, reason});
-  dlgClose(); renderQuotaRequests(); go('quota');
+  QUOTA_REQUESTS.unshift({id:'qr-' + Date.now(), project:'platform', requester:'sh', status:'pending', item, amount, unit, period, reason});
+  dlgClose(); renderQuotaRequests(); renderAdminRequests(); go('quota');
   toast('쿼터 상향 요청을 제출했습니다 — 검토 중');
 }
 /* ---------- quotaImpact: {cpu,mem,disk,ip} 변화량을 공통 UI로 표시 ---------- */
@@ -2351,16 +2371,16 @@ function quotaImpact(delta){
 }
 function renderSideQuota(){
   const u = quotaNow();
-  const rows = [['vCPU', u.cpu, QMAX.cpu, ''], ['메모리', u.mem, QMAX.mem, '']];
-  const el = document.querySelector('.sidefoot'); if(!el) return;
-  el.innerHTML = rows.map(([k,a,m]) => {
-    const p = a/m;
-    return `<div class="l"><span>${k}</span><b>${fmt(a)} / ${fmt(m)}</b></div>
-      <div class="bar"><i class="${p>=.8?'hot':''}" style="width:${Math.min(100,p*100).toFixed(1)}%"></i></div>`;
-  }).join('<div style="height:8px"></div>');
-  const nav = document.querySelector('[data-nav="quota"] .cnt');
+  const rows = [['vCPU', u.cpu, QMAX.cpu, ''], ['메모리', u.mem, QMAX.mem, 'GB'], ['디스크', u.disk, QMAX.disk, 'GB']];
   const pct = Math.round(Math.max(u.cpu/QMAX.cpu, u.mem/QMAX.mem, u.disk/QMAX.disk)*100);
-  if(nav) nav.textContent = pct + '%';
+  const cq = document.getElementById('sfCurQuota');
+  if(cq) cq.innerHTML = rows.map(([k,a,m,unit]) => {
+    const p = a/m;
+    return `<div class="qrow" style="grid-template-columns:44px minmax(0,1fr) 90px 0"><span class="lb">${k}</span>
+      <span class="bar thin"><i class="${p>=.8?'hot':''}" style="width:${Math.min(100,p*100).toFixed(1)}%"></i></span>
+      <span class="vl" style="font-size:11px">${fmt(a)}${unit} <em>/ ${fmt(m)}${unit}</em></span></div>`;
+  }).join('');
+  const cp = document.getElementById('sfCurPct'); if(cp) cp.textContent = pct + '%';
   const cpuPct = Math.round(u.cpu/QMAX.cpu*100);
   const n1 = document.getElementById('notifQuotaPct');
   if(n1) n1.textContent = `vCPU 쿼터가 80%를 넘었습니다 (현재 ${cpuPct}%).`;
@@ -2381,7 +2401,7 @@ function announce(msg){
 }
 function refreshAll(){
   renderEnvList(); renderAllQuota(); renderInstances(); renderVolumes(); renderNetwork();
-  renderTeamMembers(); renderSnapshots(); renderImageQuota(); renderQuotaPage(); renderProjectPickerQuota();
+  renderTeamMembers(); renderSnapshots(); renderImageQuota(); renderQuotaPage(); renderProjectPickerQuota(); renderAdminRequests();
   const busy = ENVS.filter(e => ['creating','starting','stopping','deleting','restarting'].includes(e.state)).length;
   document.body.dataset.busy = busy > 0 && busy <= 3 ? 'few' : 'many';
   const d = document.querySelector('[data-view="env-detail"]');
@@ -2397,7 +2417,10 @@ function transition(id, mid, ms, done){
     const next = TRANSIENT[mid];
     if(next === null){
       const i = ENVS.findIndex(x => x.id === id);
+      ENVS.forEach(x => (x.links || []).forEach(l => { if(l.to === id) l.broken = true; }));
       if(i > -1) ENVS.splice(i, 1);
+      for(let k = ENVS.length - 1; k >= 0; k--) if(ENVS[k].addon && ENVS[k].target === id) ENVS.splice(k, 1);
+      EXTRA_VOLUMES.forEach(v => { if(v.env === id){ v.att = null; v.env = null; delete v.dev; } });
       if(curEnv === id) go('environments');
       toast(`${id} 을(를) 삭제했습니다`); announce(`${id} 삭제 완료`);
     } else {
@@ -2468,13 +2491,13 @@ const EXTRA_VOLUMES = [
 const EXTRA_IPS = []; // 인스턴스에 연결되지 않은 채로 할당된 공인 IP (쿼터는 계속 점유)
 function instances(){
   const out = [];
-  ENVS.filter(e => e.state !== 'failed').forEach(e => {
+  ENVS.filter(e => e.state !== 'failed' && !e.addon).forEach(e => {
     const be = zlabel(e.zone);
     const img = e.tpl.includes('배치') ? 'python-3.12-base' : (e.tpl.includes('쿠버') ? 'ubuntu-22.04-server' : 'ubuntu-24.04-server');
     if(e.nodes){
       e.nodes.forEach(n => {
         const m = (n.spec||'').match(/(\d+) vCPU · (\d+)GB/), cpu = m ? +m[1] : 0, mem = m ? +m[2] : 0;
-        out.push({n:n.n, state:n.s, env:e.id, type:typeByCpuMem(cpu, mem), cpu, mem,
+        out.push({n:n.n, state:n.s, env:e.id, role:n.r, type:typeByCpuMem(cpu, mem), cpu, mem,
           img, ip:n.ip, fip:(n.r === 'control-plane' && e.fip) ? e.pubip : null, be});
       });
     } else {
@@ -2487,11 +2510,11 @@ function instances(){
 }
 function volumes(){
   const roots = [];
-  ENVS.filter(e => e.state !== 'failed').forEach(e => {
+  ENVS.filter(e => e.state !== 'failed' && !e.addon).forEach(e => {
     const nodes = e.nodes ? e.nodes.map(n => n.n) : [e.id + '-0'];
-    const per = Math.round(e.disk / nodes.length);
-    nodes.forEach(n => roots.push({
-      n:n + '-root', gb:per, kind:'부팅', att:n, dev:'/dev/vda',
+    const base = Math.floor(e.disk / nodes.length), rest = e.disk - base * nodes.length;
+    nodes.forEach((n, idx) => roots.push({
+      n:n + '-root', gb:base + (idx < rest ? 1 : 0), kind:'부팅', att:n, dev:'/dev/vda',
       env:e.id, be:zlabel(e.zone), stopped:e.state === 'stopped'
     }));
   });
@@ -2507,6 +2530,10 @@ function instToggleAll(cb){ instances().forEach(i => cb.checked ? instSel.add(i.
 function volToggleAll(cb){ volumes().forEach(v => cb.checked ? volSel.add(v.n) : volSel.delete(v.n)); renderVolumes(); }
 function bulkInst(op){
   const n = instSel.size; if(!n) return;
+  if(op === 'delete'){
+    const own = [...instSel].filter(ownedInst);
+    if(own.length){ toast(`환경이 관리하는 인스턴스(${own.slice(0, 3).join(', ')}${own.length > 3 ? ' 외 ' + (own.length - 3) + '대' : ''})는 개별 삭제할 수 없습니다. 환경 삭제로 회수하세요`); return; }
+  }
   if(op === 'stop' || op === 'delete'){
     BULK_INST = {op, names:[...instSel]};
     dlg(op === 'delete' ? 'bulkDeleteInst' : 'bulkStopInst', {names:[...instSel]});
@@ -2519,12 +2546,23 @@ function doBulkInst(){
   if(!BULK_INST) return;
   const {op, names} = BULK_INST;
   const msg = {stop:'정지합니다', delete:'삭제합니다'}[op];
+  if(op === 'delete') names.forEach(n => {
+    const i = instOf(n); if(i.env) return;
+    if(i.orphan){ reclaimOrphan(); return; }
+    const k = EXTRA_INSTANCES.findIndex(x => x.n === n); if(k > -1) EXTRA_INSTANCES.splice(k, 1);
+  });
   toast(`인스턴스 ${names.length}대를 ${msg}`);
-  instSel.clear(); renderInstances();
+  instSel.clear(); refreshAll();
 }
 function bulkVol(op){
   const n = volSel.size; if(!n) return;
   if(op === 'detach' || op === 'delete'){
+    const bad = [...volSel].filter(x => op === 'detach' ? (ownedVol(x) || !volOf(x).att) : (ownedVol(x) || volOf(x).att));
+    if(bad.length){
+      toast(`${bad.slice(0, 3).join(', ')}${bad.length > 3 ? ' 외 ' + (bad.length - 3) + '개' : ''} — ` + (op === 'detach'
+        ? '부팅 볼륨이거나 이미 분리된 볼륨은 분리할 수 없습니다' : '환경이 관리하는 부팅 볼륨과 연결된 볼륨은 삭제할 수 없습니다. 연결된 볼륨은 먼저 분리하세요'));
+      return;
+    }
     BULK_VOL = {op, names:[...volSel]};
     dlg(op === 'delete' ? 'bulkDeleteVol' : 'bulkDetachVol', {names:[...volSel]});
     return;
@@ -2536,8 +2574,13 @@ function doBulkVol(){
   if(!BULK_VOL) return;
   const {op, names} = BULK_VOL;
   const msg = {detach:'분리합니다', delete:'삭제합니다'}[op];
+  names.forEach(n => {
+    const k = EXTRA_VOLUMES.findIndex(v => v.n === n); if(k < 0) return;
+    if(op === 'delete') EXTRA_VOLUMES.splice(k, 1);
+    else { const v = EXTRA_VOLUMES[k]; v.att = null; v.env = null; delete v.dev; }
+  });
   toast(`볼륨 ${names.length}개를 ${msg}`);
-  volSel.clear(); renderVolumes();
+  volSel.clear(); refreshAll();
 }
 function renderInstances(){
   const all = instances();
@@ -2563,7 +2606,7 @@ function renderInstances(){
   body.innerHTML = rows.length ? rows.map(i => `
     <tr class="click ${instSel.has(i.n)?'sel':''}" onclick="openInst('${i.n}')">
       <td><input type="checkbox" ${instSel.has(i.n)?'checked':''} onclick="event.stopPropagation()" onchange="pickInst('${i.n}',this.checked)" aria-label="${i.n} 선택"></td>
-      <td class="name">${i.n}${i.orphan ? ' <span class="chip e">고아</span>' : (!i.env ? ' <span class="chip w">미배치</span>' : '')}</td>
+      <td class="name">${i.n}${i.role==='control-plane' ? ' <span class="chip">control-plane</span>' : ''}${i.orphan ? ' <span class="chip e">고아</span>' : (!i.env ? ' <span class="chip w">미배치</span>' : '')}</td>
       <td>${stTag({state:i.state})}</td>
       <td class="${i.env ? '' : 'faint'}">${i.env || '—'}</td>
       <td class="mono dim">${i.type}</td><td class="dim">${i.img}</td>
@@ -2705,7 +2748,7 @@ function iLink(i){
   <div class="g2">
     <div class="sec"><div class="sec-head"><h2>네트워크</h2></div><div class="card"><div class="card-body"><div class="kv">
       <span class="k">내부 IP</span><span class="v">${esc(i.ip)}</span>
-      <span class="k">공인 IP</span><span class="v">${i.fip ? `${esc(i.fip)} <button class="btn btn-sm btn-quiet rw" onclick="dlg('releaseIP',{ip:'${i.fip}'})">해제</button>`
+      <span class="k">공인 IP</span><span class="v">${i.fip ? `${esc(i.fip)} ${i.env ? '<span class="chip">환경 관리</span>' : `<button class="btn btn-sm btn-quiet rw" onclick="dlg('releaseIP',{ip:'${i.fip}'})">해제</button>`}`
         : `— ${i.orphan ? '' : `<button class="btn btn-sm btn-quiet rw" onclick="dlg('allocIP')">할당</button>`}`}</span>
       <span class="k">네트워크</span><span class="v">${e ? esc(e.net) : '—'}</span>
       <span class="k">키페어</span><span class="v">${e ? 'sh@laptop' : '—'}</span>
@@ -2760,7 +2803,7 @@ function renderVolumes(){
   body.innerHTML = rows.length ? rows.map(v => `
     <tr class="click ${volSel.has(v.n)?'sel':''}" onclick="openVol('${v.n}')">
       <td><input type="checkbox" ${volSel.has(v.n)?'checked':''} onclick="event.stopPropagation()" onchange="pickVol('${v.n}',this.checked)" aria-label="${v.n} 선택"></td>
-      <td class="name">${v.n}${v.orphan ? ' <span class="chip e">고아</span>' : ''}</td>
+      <td class="name">${v.n}${v.kind === '부팅' ? ' <span class="chip">환경 관리</span>' : ''}${v.orphan ? ' <span class="chip e">고아</span>' : ''}</td>
       <td>${v.att ? (v.stopped ? '<span class="st stop">연결됨 · 정지</span>' : '<span class="st run">연결됨</span>') : '<span class="st stop">분리됨</span>'}</td>
       <td class="num">${gb(v.gb)}</td><td class="dim">${v.kind}</td>
       <td class="${v.att ? 'mono' : 'faint'}">${v.att ? `${v.att} <span class="faint">${v.dev||''}</span>` : '—'}</td>
@@ -2795,7 +2838,7 @@ function renderVolDetail(){
   document.getElementById('vSub').textContent = `${gb(v.gb)} · ${v.kind} · ${v.be}`;
   document.getElementById('vActions').innerHTML = `
     ${v.att ? `<button class="btn rw" onclick="dlg('expandVol',{n:'${v.n}',gb:${v.gb}})">확장</button>
-               <button class="btn rw" onclick="dlg('detachVol',{n:'${v.n}'})">분리</button>`
+               <button class="btn rw" ${v.kind === '부팅' ? 'disabled title="환경이 관리하는 부팅 볼륨은 분리할 수 없습니다"' : `onclick="dlg('detachVol',{n:'${v.n}'})"`}>분리</button>`
             : `<button class="btn btn-pri rw" onclick="dlg('attachVol',{n:'${v.n}'})">연결</button>`}
     <button class="btn btn-quiet rw" onclick="volMenu(event,'${v.n}',${!!v.att})"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button>`;
   document.getElementById('vBody').innerHTML = `
@@ -2822,7 +2865,7 @@ function renderVolDetail(){
 
 /* ---------- 네트워크 파생 ---------- */
 function networks(){
-  return ENVS.filter(e => e.state !== 'failed').map(e => {
+  return ENVS.filter(e => e.state !== 'failed' && !e.addon).map(e => {
     const parts = (e.net || '').split(' · ');
     return { n:parts[0] || (e.id + '-net'), env:e.id, cidr:parts[1] || '—',
       sub:(e.nodes ? 'default, pods' : (e.zone === 'zone-b' ? 'tier-1' : 'default')),
@@ -2836,7 +2879,7 @@ function publicIPs(){
     .concat(EXTRA_IPS.map(ip => ({ ip, att:'—', env:'—' })));
 }
 function securityGroups(){
-  const per = ENVS.filter(e => e.state !== 'failed').map(e => ({
+  const per = ENVS.filter(e => e.state !== 'failed' && !e.addon).map(e => ({
     n:'sg-' + e.id,
     rules: e.nodes ? '22/tcp, 6443/tcp, 30000-32767/tcp' : '22/tcp, 8080/tcp',
     used: '인스턴스 ' + (e.nodes ? e.nodes.length : 1), shared:false
@@ -2862,13 +2905,13 @@ function renderNetwork(){
   const ips = publicIPs();
   document.getElementById('ipRows').innerHTML = ips.map(p => `<tr>
     <td class="mono">${p.ip}</td><td class="mono">${p.att}</td><td>${p.env}</td>
-    <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('releaseIP',{ip:'${p.ip}'})">해제</button></td></tr>`).join('');
+    <td class="act">${p.env !== '—' ? '<span class="chip">환경 관리</span>' : `<button class="btn btn-sm btn-quiet rw" onclick="dlg('releaseIP',{ip:'${p.ip}'})">해제</button>`}</td></tr>`).join('');
   document.getElementById('ipSub').textContent = `${ips.length} / ${QMAX.ip}`;
 
   document.getElementById('sgRows').innerHTML = securityGroups().map(g => `<tr>
     <td class="name">${g.n}${g.shared ? ' <span class="chip">공유</span>' : ''}</td>
     <td class="dim mono">${g.rules}</td><td class="dim">${g.used}</td>
-    <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('editSG',{n:'${g.n}'})">규칙</button></td></tr>`).join('');
+    <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('editSG',{n:'${g.n}'})">${g.shared ? '규칙' : '보기'}</button></td></tr>`).join('');
 
   const ls = envLinks();
   document.getElementById('linkRows').innerHTML = ls.length ? ls.map(l => `<tr>
@@ -3035,7 +3078,7 @@ function menuAt(ev, id){
   if(!rowMenu){ rowMenu = document.createElement('div'); rowMenu.className = 'menu'; document.body.appendChild(rowMenu); }
   rowMenu.innerHTML = `
     <button onclick="closeMenus();openEnv('${id}')"><svg class="ic ic-sm"><use href="#i-right"/></svg>열기</button>
-    ${e.state==='running' ? `<button class="rw" onclick="dlg('restartEnv',{id:'${id}'})"><svg class="ic ic-sm"><use href="#i-retry"/></svg>재시작</button>
+    ${(e.state==='running' && !e.addon) ? `<button class="rw" onclick="dlg('restartEnv',{id:'${id}'})"><svg class="ic ic-sm"><use href="#i-retry"/></svg>재시작</button>
     <button class="rw" onclick="dlg('stopEnv',{id:'${id}'})">정지</button>
     <button class="rw" onclick="dlg('terminal',{id:'${id}'})"><svg class="ic ic-sm"><use href="#i-term"/></svg>터미널</button>` :
     e.state==='stopped' ? `<button class="rw" onclick="dlg('startEnv',{id:'${id}'})"><svg class="ic ic-sm"><use href="#i-play"/></svg>시작</button>` : ''}
@@ -3043,7 +3086,7 @@ function menuAt(ev, id){
     <button class="rw" onclick="dlg('snapCreate',{id:'${id}'})"><svg class="ic ic-sm"><use href="#i-cam"/></svg>스냅샷 생성</button>
     <button class="rw" onclick="dlg('saveImage',{id:'${id}'})"><svg class="ic ic-sm"><use href="#i-img"/></svg>이미지로 저장</button>
     <button class="rw" onclick="dlg('saveTemplate',{id:'${id}'})"><svg class="ic ic-sm"><use href="#i-layers"/></svg>템플릿으로 저장</button>
-    <button class="rw" onclick="closeMenus();openLink()"><svg class="ic ic-sm"><use href="#i-link"/></svg>환경 연결</button>
+    <button class="rw" onclick="closeMenus();openLink('${id}')"><svg class="ic ic-sm"><use href="#i-link"/></svg>환경 연결</button>
     <button class="rw" onclick="dlg('extend',{id:'${id}'})">만료 연장</button>
     <button class="rw" onclick="dlg('rename',{id:'${id}'})">이름 변경</button>
     <button class="rw" onclick="dlg('exportEnv',{id:'${id}'})"><svg class="ic ic-sm"><use href="#i-dl"/></svg>Terraform 내보내기</button>
@@ -3073,6 +3116,7 @@ function renderDetail(){
   $('#dSub').innerHTML = `${e.tpl} v${e.tv} · ${zlabel(e.zone)} · 점유 vCPU ${e.cpu} · 메모리 ${e.mem}GB · 디스크 ${e.disk}GB${snapNote}`;
 
   $('#dActions').innerHTML =
+    (e.addon && e.state==='running') ? `<button class="btn btn-quiet" onclick="menuAt(event,'${e.id}')"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button>` :
     e.state==='running' ? `<button class="btn" onclick="dlg('terminal',{id:'${e.id}'})"><svg class="ic ic-sm"><use href="#i-term"/></svg>터미널</button><button class="btn rw" onclick="dlg('stopEnv',{id:'${e.id}'})">정지</button><button class="btn btn-quiet" onclick="menuAt(event,'${e.id}')"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button>` :
     e.state==='stopped' ? `<button class="btn btn-pri rw" onclick="dlg('startEnv',{id:'${e.id}'})"><svg class="ic ic-sm"><use href="#i-play"/></svg>시작</button><button class="btn btn-quiet" onclick="menuAt(event,'${e.id}')"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button>` :
     e.state==='creating' ? `<button class="btn" onclick="go('activity')">진행 보기</button><button class="btn btn-quiet rw" onclick="dlg('cancelJob',{job:'job-a41c'})">취소</button>` :
@@ -3098,7 +3142,8 @@ function renderDetail(){
 
   const tabs = [['acc','접속'],['ov','개요']];
   if(e.nodes) tabs.push(['nodes','노드']);
-  tabs.push(['res','리소스'],['log','로그'],['set','설정']);
+  if(!e.addon) tabs.push(['res','리소스']);
+  tabs.push(['log','로그'],['set','설정']);
   $('#dTabs').innerHTML = tabs.map(([k,l]) =>
     `<button class="tab" aria-selected="${k===curTab}" onclick="curTab='${k}';renderDetail()">${l}</button>`).join('');
 
@@ -3116,6 +3161,7 @@ function tAcc(e){
 
   const stopped = e.state === 'stopped';
   const left = `
+    ${e.addon ? addonUrl(e) : ''}
     ${e.ssh ? `<div class="fld"><div class="lbl">SSH</div>
       <div class="pre"><span class="t">${e.ssh}</span>
         <button class="btn btn-sm btn-quiet" onclick="copy(event,'${e.ssh}')"><svg class="ic ic-sm"><use href="#i-copy"/></svg></button></div>
@@ -3134,13 +3180,17 @@ function tAcc(e){
       <p class="hint">비밀번호는 한 번만 표시됩니다. 이후에는 재발급만 가능합니다.</p></div>` : ''}
     <div class="fld"><div class="lbl">연결된 환경</div>
       ${e.links && e.links.length ? `<div class="card"><div class="tw"><table><tbody>
-        ${e.links.map(l => `<tr><td class="mono">${l.to}</td><td class="dim mono">${l.port}</td>
+        ${e.links.map(l => l.broken
+          ? `<tr><td class="mono faint" style="text-decoration:line-through">${l.to}</td><td class="dim mono">${l.port}</td>
+          <td><span class="st err">끊어짐 · 대상 환경이 삭제됨</span></td>
+          <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="doUnlink('${e.id}','${l.to}')">제거</button></td></tr>`
+          : `<tr><td class="mono">${l.to}</td><td class="dim mono">${l.port}</td>
           <td class="mono">${l.to}.env.acme.internal</td>
           <td class="act"><button class="btn btn-sm btn-quiet" onclick="copy(event,'${l.to}.env.acme.internal:${l.port}')"><svg class="ic ic-sm"><use href="#i-copy"/></svg></button></td></tr>`).join('')}
-      </tbody></table></div></div>` : `<p class="hint" style="margin-top:0">연결된 환경이 없습니다. 다른 환경에 붙으려면 연결을 추가하세요.</p>`}
-      <button class="btn btn-sm rw" style="margin-top:8px" onclick="openLink()"><svg class="ic ic-sm"><use href="#i-link"/></svg>환경 연결</button></div>`;
+      </tbody></table></div></div>${e.links.some(l => l.broken) ? '<p class="hint w">연결된 환경이 삭제되어 접속할 수 없습니다. 더 이상 필요 없으면 제거하세요.</p>' : ''}` : `<p class="hint" style="margin-top:0">연결된 환경이 없습니다. 다른 환경에 붙으려면 연결을 추가하세요.</p>`}
+      <button class="btn btn-sm rw" style="margin-top:8px" onclick="openLink('${e.id}')"><svg class="ic ic-sm"><use href="#i-link"/></svg>환경 연결</button></div>`;
 
-  const right = `
+  const right = e.addon ? addonInfo(e) : `
     <div class="fld"><div class="lbl">방화벽</div>
       <div class="card"><div class="tw"><table><thead><tr><th>포트</th><th>출처</th><th></th></tr></thead><tbody>
       ${(e.fw || [['22 / SSH','203.0.113.9']]).map(f => `<tr><td class="mono">${f[0]}</td><td class="${f[1]==='비공개'?'dim':'mono'}">${f[1]}</td>
@@ -3192,7 +3242,7 @@ function tNodes(e){
         <td class="name">${n.n}</td><td class="dim">${n.r}</td><td>${stTag({state:n.s})}</td>
         <td class="dim mono">${n.spec}</td><td class="mono ${n.ip==='—'?'faint':''}">${n.ip}</td>
         <td class="dim mono">${n.ver}</td><td class="dim mono">${n.age}</td>
-        <td class="act">${n.s==='creating'
+        <td class="act"><button class="btn btn-sm" onclick="dlg('terminal',{id:'${e.id}',node:'${n.n}'})"><svg class="ic ic-sm"><use href="#i-term"/></svg>터미널</button> ${n.s==='creating'
           ? '<button class="btn btn-sm btn-quiet" onclick="go(\'activity\')">진행 보기</button>'
           : `<button class="btn btn-sm rw" onclick="dlg('restartNode',{n:'${n.n}'})">재시작</button> <button class="btn btn-sm btn-quiet rw" onclick="dlg('drainNode',{n:'${n.n}'})">비우기</button>`}</td>
       </tr>`).join('')}</tbody>
@@ -3209,10 +3259,10 @@ function tRes(e){
     <div class="card"><div class="tw"><table>
       <thead><tr><th>이름</th><th>상태</th><th>서버 타입</th><th>내부 IP</th><th></th></tr></thead>
       <tbody>${(e.nodes || [{n:e.id+'-0', s:e.state, spec:e.flavor, ip:'10.64.3.11'}]).map(n => `
-        <tr><td class="name">${n.n}</td><td>${stTag({state:n.s})}</td><td class="mono dim">${n.spec||e.flavor}</td><td class="mono">${n.ip||'—'}</td>
+        <tr><td class="name">${n.n}${n.r==='control-plane' ? ' <span class="chip">control-plane</span>' : ''}</td><td>${stTag({state:n.s})}</td><td class="mono dim">${n.spec||e.flavor}</td><td class="mono">${n.ip||'—'}</td>
         <td class="act"><button class="btn btn-sm rw" onclick="dlg('resize',{n:'${n.n}'})">크기 변경</button>
           <button class="btn btn-sm btn-quiet rw" onclick="instMenu(event,'${n.n}','${n.s||e.state}')"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button></td></tr>`).join('')}
-      </tbody></table></div></div></div>
+      </tbody></table></div><div class="card-foot">환경이 만든 인스턴스는 개별로 삭제할 수 없습니다. 크기 변경은 환경 정의에 그대로 반영됩니다.</div></div></div>
 
   <div class="g2">
     <div class="sec">
@@ -3221,10 +3271,10 @@ function tRes(e){
       <div class="card"><div class="tw"><table>
         <thead><tr><th>이름</th><th class="num">크기</th><th>종류</th><th>장치</th><th></th></tr></thead>
         <tbody>
-          <tr><td class="name">${e.id}-root</td><td class="num">${e.disk} GB</td><td class="dim">부팅</td><td class="mono dim">/dev/vda</td>
-            <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('expandVol',{n:'${e.id}-root',gb:${e.disk}})">확장</button></td></tr>
+          ${volumes().filter(v => v.env === e.id).map(v => `<tr><td class="name">${v.n}${v.kind === '부팅' ? ' <span class="chip">환경 관리</span>' : ''}</td><td class="num">${v.gb} GB</td><td class="dim">${v.kind}</td><td class="mono dim">${v.dev || '—'}</td>
+            <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('expandVol',{n:'${v.n}',gb:${v.gb}})">확장</button>${v.kind === '데이터' ? ` <button class="btn btn-sm btn-quiet rw" onclick="dlg('detachVol',{n:'${v.n}'})">분리</button>` : ''}</td></tr>`).join('')}
         </tbody></table></div>
-      <div class="card-foot">부팅 볼륨은 환경 삭제 시 함께 회수됩니다.</div></div>
+      <div class="card-foot">부팅 볼륨은 환경이 관리합니다. 개별로 분리·삭제할 수 없고 환경 삭제 시 함께 회수됩니다.</div></div>
     </div>
     <div class="sec">
       <div class="sec-head"><h2>네트워크</h2></div>
@@ -3235,7 +3285,7 @@ function tRes(e){
           <span class="k">공인 IP</span><span class="v">${ip || '할당 안 함'}</span>
         </div>
         <div style="display:flex;gap:6px;margin-top:11px">
-          ${ip ? `<button class="btn btn-sm btn-quiet rw" onclick="dlg('releaseIP',{ip:'${ip}'})">IP 해제</button>`
+          ${ip ? `<span class="chip">환경 관리</span>`
                : `<button class="btn btn-sm rw" onclick="dlg('allocIP')">공인 IP 할당</button>`}
           <button class="btn btn-sm btn-quiet rw" onclick="dlg('editSG',{n:'sg-${e.id}'})">보안그룹 규칙</button>
         </div>
@@ -3268,10 +3318,13 @@ function tSet(e){
       <button class="btn btn-sm rw" style="margin-top:8px" onclick="dlg('runScript',{id:'${e.id}'})">다시 실행</button></div>
   </div></div>
   <div><div class="card"><div class="card-head"><h2>환경 연결</h2><div class="grow"></div>
-      <button class="btn btn-sm rw" onclick="openLink()">연결 추가</button></div>
+      <button class="btn btn-sm rw" onclick="openLink('${e.id}')">연결 추가</button></div>
       <div class="tw"><table><thead><tr><th>대상</th><th>포트</th><th>방향</th><th></th></tr></thead><tbody>
-      ${(e.links||[]).length ? e.links.map(l => `<tr><td class="mono">${l.to}</td><td class="mono">${l.port}</td><td class="dim">${l.dir}</td>
-        <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('unlink',{from:'${e.id}',to:'${'$'}{l.to}'})">해제</button></td></tr>`).join('')
+      ${(e.links||[]).length ? e.links.map(l => l.broken
+        ? `<tr><td class="mono faint" style="text-decoration:line-through">${l.to}</td><td class="mono">${l.port}</td><td><span class="st err">끊어짐</span></td>
+        <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="doUnlink('${e.id}','${l.to}')">제거</button></td></tr>`
+        : `<tr><td class="mono">${l.to}</td><td class="mono">${l.port}</td><td class="dim">${l.dir}</td>
+        <td class="act"><button class="btn btn-sm btn-quiet rw" onclick="dlg('unlink',{from:'${e.id}',to:'${l.to}'})">해제</button></td></tr>`).join('')
         : '<tr><td colspan="4" class="faint" style="text-align:center;padding:20px">연결 없음</td></tr>'}
       </tbody></table></div></div>
     <div style="margin-top:18px" class="rw">
@@ -3681,6 +3734,26 @@ function menu(ev, id){
 }
 document.addEventListener('click', () => closeMenus());
 
+/* ---------- 사이드바 프로젝트 플라이아웃 (hover, 지연 hide) ---------- */
+let sfHideTimer = null;
+function sfShow(){
+  clearTimeout(sfHideTimer);
+  const fo = document.getElementById('sideFlyout');
+  const r = document.querySelector('.side-projbtn').getBoundingClientRect();
+  fo.style.left = r.left + 'px';
+  fo.style.width = Math.max(r.width, 240) + 'px';
+  fo.style.bottom = (window.innerHeight - r.top + 2) + 'px';
+  fo.style.display = 'block';
+}
+function sfHide(){
+  clearTimeout(sfHideTimer);
+  document.getElementById('sideFlyout').style.display = 'none';
+}
+function sfHideDelayed(){
+  clearTimeout(sfHideTimer);
+  sfHideTimer = setTimeout(sfHide, 250);
+}
+
 /* 클릭 가능한 표 행을 키보드로도 조작 */
 function makeRowsFocusable(root){
   (root || document).querySelectorAll('tr.click').forEach(tr => {
@@ -3720,10 +3793,14 @@ function trapClose(){ if(lastFocus && lastFocus.focus) lastFocus.focus(); lastFo
 let step = 1;
 function openWizard(){ closeMenus(); $('#wzScrim').classList.add('open'); wzStep(1); trapOpen($('#wzScrim')); }
 function closeWizard(){ $('#wzScrim').classList.remove('open'); trapClose(); }
+let wzAddon = null;
+function wzTpl(){ const row = document.querySelector('#wzTplRows .st.prog'); return row ? TPL.find(x => x.n === row.closest('tr').dataset.tpl) : null; }
 function wzStep(s){
   step = s;
-  $('#wz1').hidden = (s!==1); $('#wz2').hidden = (s!==2); $('#wzBack').hidden = (s!==2);
-  $('#wzTitle').textContent = (s===1) ? '템플릿 선택' : '구성';
+  const wt = wzTpl();
+  wzAddon = (s === 2 && wt && wt.needsEnv) ? wt : null;
+  $('#wz1').hidden = (s!==1); $('#wz2').hidden = (s!==2) || !!wzAddon; $('#wz2k').hidden = (s!==2) || !wzAddon; $('#wzBack').hidden = (s!==2);
+  $('#wzTitle').textContent = (s===1) ? '템플릿 선택' : (wzAddon ? '설치 구성' : '구성');
   if(s === 2){
     const row = document.querySelector('#wzTplRows .st.prog');
     const t = row ? TPL.find(x => x.n === row.closest('tr').dataset.tpl) : null;
@@ -3734,15 +3811,16 @@ function wzStep(s){
       inp.value = base + '-' + i;
       inp.oninput = () => { inp.dataset.touched = '1'; renderWzPlan(); };
     }
-    renderWzWarnBanner();
+    if(wzAddon) renderWzK(wzAddon); else renderWzWarnBanner();
   }
   $('#wzStepLbl').textContent = s + ' / 2';
-  $('#wzNext').textContent = (s===1) ? '다음' : '생성';
+  $('#wzNext').textContent = (s===1) ? '다음' : (wzAddon ? '설치' : '생성');
   $('#wzNext').disabled = (s===1 && !document.querySelector('#wzTplRows .st.prog'));
   delta();
 }
 function wzNext(){
   if(step===1){ wzStep(2); return; }
+  if(wzAddon){ installAddon(wzAddon); return; }
   const sz = document.querySelector('#wz2 .opt[data-cpu][aria-pressed="true"]');
   const nameIn = document.querySelector('#wz2 input[type=text]');
   const name = (nameIn && nameIn.value.trim()) || 'new-env';
@@ -3836,6 +3914,7 @@ function renderWzWarnBanner(){
 function delta(){
   const el = $('#delta');
   if(step!==2){ el.textContent=''; return; }
+  if(wzAddon){ renderWzKDelta(); return; }
   const s = document.querySelector('#wz2 .opt[data-cpu][aria-pressed="true"]');
   const c = s ? +s.dataset.cpu : 0, m = s ? +s.dataset.mem : 0;
   const dskEl = document.getElementById('dskv');
@@ -3910,29 +3989,35 @@ function instMenu(ev, n, state){
     ${(meta.env || meta.orphan) ? '' : `<button class="rw" onclick="dlg('assignEnv',{n:'${n}'})">환경에 배치</button>`}
     ${meta.orphan ? '' : `<button class="rw" onclick="dlg('saveImage',{id:'${n}'})"><svg class="ic ic-sm"><use href="#i-img"/></svg>이미지로 저장</button>`}
     <div class="msep"></div>
-    <button class="danger rw" onclick="dlg('delInstance',{n:'${n}'})">${meta.orphan ? '회수' : '삭제'}</button>`;
+    ${meta.env
+      ? `<button onclick="closeMenus();openEnv('${meta.env}')"><svg class="ic ic-sm"><use href="#i-right"/></svg>환경 열기</button>
+         <button disabled title="${OWNED}">삭제 불가 · ${meta.role === 'control-plane' ? '컨트롤 플레인' : '환경이 관리'}</button>`
+      : `<button class="danger rw" onclick="dlg('delInstance',{n:'${n}'})">${meta.orphan ? '회수' : '삭제'}</button>`}`;
   placeMenu(ev);
 }
 function volMenu(ev, n, attached){
   ev.stopPropagation(); closeMenus();
+  const v = volOf(n);
   if(!rowMenu){ rowMenu = document.createElement('div'); rowMenu.className = 'menu'; document.body.appendChild(rowMenu); }
   rowMenu.innerHTML = `
     ${attached
-      ? `<button class="rw" onclick="dlg('detachVol',{n:'${n}'})">분리</button>`
+      ? (v.kind === '부팅' ? `<button disabled title="${OWNED}">분리 불가 · 부팅 볼륨</button>` : `<button class="rw" onclick="dlg('detachVol',{n:'${n}'})">분리</button>`)
       : `<button class="rw" onclick="dlg('attachVol',{n:'${n}'})">연결</button>`}
     <button class="rw" onclick="dlg('expandVol',{n:'${n}'})">확장</button>
     <button class="rw" onclick="dlg('snapCreate',{id:'${n}'})"><svg class="ic ic-sm"><use href="#i-cam"/></svg>스냅샷</button>
     <div class="msep"></div>
-    <button class="danger rw" onclick="dlg('snapDelete',{name:'${n}'})">삭제</button>`;
+    ${v.kind === '부팅' ? `<button disabled title="${OWNED}">삭제 불가 · 환경이 관리</button>`
+      : attached ? `<button disabled title="연결된 볼륨은 먼저 분리해야 합니다">삭제 불가 · 연결됨</button>`
+      : `<button class="danger rw" onclick="dlg('delVolume',{n:'${n}'})">삭제</button>`}`;
   placeMenu(ev);
 }
+
 function placeMenu(ev){
   const r = ev.currentTarget.getBoundingClientRect();
   rowMenu.style.top = (r.bottom + window.scrollY + 4) + 'px';
   rowMenu.style.left = Math.max(8, r.right + window.scrollX - 200) + 'px';
   rowMenu.classList.add('open');
 }
-function openLink(){ closeMenus(); $('#linkScrim').classList.add('open'); trapOpen($('#linkScrim')); }
 function closeLink(){ $('#linkScrim').classList.remove('open'); trapClose(); }
 function openType(){ $('#typeScrim').classList.add('open'); trapOpen($('#typeScrim')); }
 function closeType(){ $('#typeScrim').classList.remove('open'); trapClose(); }
@@ -3958,7 +4043,15 @@ function openDel(id){
   ];
   if(e.access !== '—' && e.be === 'OpenStack') res.push(['공인 IP', e.access, '1']);
   if(e.links && e.links.length) res.push(['연결', e.links.map(l=>l.to).join(', '), '해제됨']);
+  const inc = ENVS.filter(x => x.id !== e.id && !x.addon && (x.links || []).some(l => l.to === e.id && !l.broken));
+  if(inc.length) res.push(['연결 (수신)', inc.map(x => x.id).join(', '), '끊어짐']);
+  const adds = ENVS.filter(x => x.addon && x.target === e.id);
+  if(adds.length) res.push(['설치된 애드온', adds.map(x => x.id).join(', '), '함께 삭제']);
+  const dvols = EXTRA_VOLUMES.filter(v => v.env === e.id);
+  if(dvols.length) res.push(['데이터 볼륨', dvols.map(v => v.n).join(', '), '분리만 (유지)']);
+  if(e.addon){ res.length = 0; res.push(['Helm Release', e.tpl, `→ ${e.target}`], ['EnvLink', `${e.id} → ${e.target}`, '해제됨']); }
   $('#delBody').innerHTML = `
+    ${inc.length ? fBan(`이 환경으로 연결된 환경이 있습니다: <b>${inc.map(x => x.id).join(', ')}</b>. 삭제하면 해당 환경의 연결이 <b>끊어짐</b> 상태가 되어 더 이상 접속할 수 없습니다.`) : ''}
     ${e.prot ? `<div class="banner e" style="margin-bottom:16px"><svg class="ic"><use href="#i-warn"/></svg><div><b>삭제 보호</b>가 켜져 있습니다. 설정 탭에서 해제해야 삭제할 수 있습니다.</div></div>` : ''}
     <div class="lbl">함께 회수되는 리소스</div>
     <div class="card"><div class="tw"><table><tbody>
@@ -3992,6 +4085,230 @@ function confirmDel(){
   if(id) transition(id, 'deleting', 2400);
 }
 function closeDel(){ $('#delScrim').classList.remove('open'); trapClose(); }
+
+
+/* ---------- 환경이 관리하는 리소스 (드리프트 방지) ----------
+   환경(템플릿)이 만든 인스턴스·부팅 볼륨·공인 IP·보안그룹은 개별로 삭제·분리·해제할 수 없고
+   환경 삭제로만 회수된다. 크기 변경·볼륨 확장처럼 허용되는 변경은 환경 정의(e.cpu/mem/disk)에 반영한다. */
+const OWNED = '환경이 관리하는 리소스입니다. 환경 삭제로만 회수됩니다.';
+const instOf = n => instances().find(x => x.n === n) || {};
+const volOf = n => volumes().find(x => x.n === n) || {};
+const ownedInst = n => !!instOf(n).env;
+const ownedVol = n => volOf(n).kind === '부팅';
+const ownedIP = ip => publicIPs().some(p => p.ip === ip && p.env !== '—');
+function blockDlg(title, msg, envId){
+  return ({t:title, w:480,
+    b:`${fBan(msg)}<p class="hint">${envId ? '삭제하려면 환경째 삭제하세요. 부팅 볼륨·공인 IP·보안그룹이 함께 회수됩니다.' : ''}</p>`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">닫기</button>${envId ? `<button class="btn btn-pri" onclick="dlgClose();openEnv('${envId}')">환경 열기</button>` : ''}`});
+}
+function doDelInstance(n){
+  const i = instOf(n); if(!i.n || i.env) return;
+  if(i.orphan){ reclaimOrphan(); return; }
+  const k = EXTRA_INSTANCES.findIndex(x => x.n === n); if(k > -1) EXTRA_INSTANCES.splice(k, 1);
+  refreshAll(); toast(`${n} 을(를) 삭제했습니다`);
+}
+function doDelVolume(n){
+  const v = volOf(n); if(!v.n || v.kind === '부팅' || v.att) return;
+  const k = EXTRA_VOLUMES.findIndex(x => x.n === n); if(k > -1) EXTRA_VOLUMES.splice(k, 1);
+  refreshAll(); toast(`${n} 을(를) 삭제했습니다`);
+}
+function doDetachVol(n){
+  const v = EXTRA_VOLUMES.find(x => x.n === n); if(!v) return;
+  v.att = null; v.env = null; delete v.dev;
+  refreshAll(); toast(`${n} 을(를) 분리했습니다`);
+}
+function doAttach(from, byInst){
+  const b = document.querySelector('#atOpts .opt[aria-pressed="true"]'); if(!b) return;
+  const volName = byInst ? b.dataset.pick : from, instName = byInst ? from : b.dataset.pick;
+  const v = EXTRA_VOLUMES.find(x => x.n === volName), inst = instOf(instName); if(!v || !inst.n) return;
+  v.att = inst.n; v.env = inst.env || null; v.dev = ($('#atDev').value.trim() || '/dev/vdb');
+  dlgClose(); refreshAll(); toast(`${volName} 을(를) ${inst.n} 에 연결했습니다`);
+}
+
+/* ---------- 환경 연결: 호출한 환경 기준으로 대상 필터 ---------- */
+let linkFrom = null;
+function openLink(id){
+  closeMenus();
+  const dv = document.querySelector('[data-view="env-detail"]');
+  linkFrom = id || ((dv && !dv.hidden) ? curEnv : 'dev-sandbox');
+  renderLinkDlg();
+  $('#linkScrim').classList.add('open'); trapOpen($('#linkScrim'));
+}
+function linkWhy(src, x){
+  if(x.zone !== src.zone) return `${zlabel(x.zone)} · 다른 존 — 연결 불가`;
+  if((src.links || []).some(l => l.to === x.id && !l.broken)) return '이미 연결됨';
+  if(['creating','deleting'].includes(x.state)) return `${STATES[x.state].l} — 연결 불가`;
+  return '';
+}
+function renderLinkDlg(){
+  const src = ENVS.find(x => x.id === linkFrom) || ENVS[0];
+  const cands = ENVS.filter(x => x.id !== src.id && x.state !== 'failed' && !x.addon);
+  let picked = false;
+  $('#linkTargets').innerHTML = cands.map(x => {
+    const w = linkWhy(src, x), on = !w && !picked; if(on) picked = true;
+    return `<button class="opt" ${w ? 'disabled' : ''} aria-pressed="${on}" data-to="${x.id}" onclick="one(this);renderLinkKv()">${x.id}<span class="o2">${w || `${x.tpl} · ${zlabel(x.zone)}`}</span></button>`;
+  }).join('') || '<span class="faint">다른 환경이 없습니다</span>';
+  $('#linkFrom').innerHTML = `<span class="mono">${esc(src.id)}</span> (${zlabel(src.zone)}) 에서 접근할 환경`;
+  $('#linkNote').textContent = picked ? '' : `같은 존(${zlabel(src.zone)})에 연결할 수 있는 환경이 없습니다.`;
+  $('#linkOk').disabled = !picked;
+  renderLinkKv();
+}
+function renderLinkKv(){
+  const src = ENVS.find(x => x.id === linkFrom) || ENVS[0];
+  const b = document.querySelector('#linkTargets .opt[aria-pressed="true"]');
+  $('#linkKv').innerHTML = `<span class="k">적용 방식</span><span class="v">양쪽 네트워크에 인바운드 규칙 추가</span>
+    <span class="k">이름 해석</span><span class="v">${b ? esc(b.dataset.to) + '.env.acme.internal' : '—'}</span>
+    <span class="k">제약</span><span class="v">같은 존(${zlabel(src.zone)})의 환경끼리만 가능</span>`;
+}
+function doLink(){
+  const b = document.querySelector('#linkTargets .opt[aria-pressed="true"]'); if(!b) return;
+  const src = ENVS.find(x => x.id === linkFrom); if(!src) return;
+  const dirBtn = document.querySelector('#linkDir .opt[aria-pressed="true"]');
+  (src.links = src.links || []).push({to:b.dataset.to, port:($('#linkPort').value.trim() || '5432'), dir:dirBtn ? dirBtn.textContent.trim() : '단방향'});
+  closeLink(); refreshAll(); toast(`${src.id} → ${b.dataset.to} 연결했습니다`);
+}
+function doUnlink(from, to){
+  const src = ENVS.find(x => x.id === from); if(!src || !src.links) return;
+  const i = src.links.findIndex(l => l.to === to);
+  if(i > -1) src.links.splice(i, 1);
+  refreshAll();
+}
+
+/* ---------- 이미지 공용 등록 승인 ---------- */
+const PG16 = {state:'pending', scope:'public'};
+function renderPgImage(){
+  const u = document.getElementById('imgPgRow'), a = document.getElementById('admImgPgRow'); if(!u || !a) return;
+  const s = PG16.state, pub = PG16.scope === 'public';
+  const chip = s === 'pending' ? '<span class="chip w">승인 대기</span>' : s === 'rejected' ? '<span class="chip e">반려됨</span>' : `<span class="chip">${pub ? '공용' : '프로젝트'}</span>`;
+  const share = s === 'pending' ? '공용 요청' : s === 'rejected' ? '나만' : (pub ? '공용' : '프로젝트');
+  const userAct = s === 'pending'
+    ? `<button class="btn btn-sm btn-quiet rw" onclick="dlg('imageShare',{name:'pg16-seeded'})">요청 취소</button> <span class="slot"></span>`
+    : s === 'approved'
+      ? `<button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button> <span class="slot"></span>`
+      : `<button class="btn btn-sm rw" onclick="openWizard()">환경 생성</button> <button class="btn btn-sm btn-quiet rw" onclick="dlg('imageShare',{name:'pg16-seeded'})"><svg class="ic ic-sm"><use href="#i-dots"/></svg></button>`;
+  u.innerHTML = `<td class="name">pg16-seeded ${chip}</td><td class="dim">pg-staging 에서 생성</td><td class="dim">Ubuntu 24.04 + PG16</td><td class="num">6 GB</td><td class="dim mono">kr-a</td><td class="dim">${share}</td><td class="dim mono">${s === 'approved' ? '무기한' : '30일'}</td><td class="act">${userAct}</td>`;
+  const stAdm = s === 'pending' ? '<span class="st warn">검토 필요</span>' : s === 'rejected' ? '<span class="st stop">반려</span>' : '<span class="st run">정상</span>';
+  const admAct = s === 'pending' ? `<button class="btn btn-sm btn-pri" onclick="dlg('approveImage',{name:'pg16-seeded'})">검토</button>` : `<button class="btn btn-sm btn-quiet">편집</button>`;
+  a.innerHTML = `<td class="name">pg16-seeded ${chip}</td><td class="dim">sh · pg-staging</td><td class="dim">Ubuntu 24.04 + PG16</td><td class="num">6 GB</td><td class="mono dim">img-usr-4c21</td><td class="faint">—</td><td class="dim">${s === 'approved' ? (pub ? '공용' : '프로젝트 platform') : share}</td><td>${stAdm}</td><td class="act">${admAct}</td>`;
+}
+function approvePg(){
+  const b = document.querySelector('#dBodyM .opt[aria-pressed="true"]');
+  PG16.scope = (b && b.textContent.indexOf('요청 프로젝트') === 0) ? 'project' : 'public';
+  PG16.state = 'approved';
+  dlgClose(); renderPgImage();
+  toast(PG16.scope === 'public' ? 'pg16-seeded 를 공용 이미지로 등록했습니다' : 'pg16-seeded 를 프로젝트 공유로 등록했습니다');
+}
+function rejectPg(){ PG16.state = 'rejected'; dlgClose(); renderPgImage(); toast('pg16-seeded 공용 등록을 반려했습니다'); }
+
+/* ---------- 쿼터 상향 요청 → 관리자 승인 대기 ---------- */
+const QK = {'vCPU':'cpu', '메모리':'mem', '디스크':'disk'};
+function renderAdminRequests(){
+  const tb = document.getElementById('admProjRows'); if(!tb) return;
+  tb.querySelectorAll('tr[data-qreq]').forEach(r => r.remove());
+  const pend = QUOTA_REQUESTS.filter(r => r.status === 'pending');
+  const anchor = document.getElementById('admTeamSearchRow'), u = quotaNow();
+  pend.forEach(r => {
+    const k = QK[r.item] || 'cpu';
+    const cell = key => key === k
+      ? `<span style="color:var(--warn)">${fmt(u[key])} / ${fmt(QMAX[key])} → ${fmt(QMAX[key] + r.amount)}</span>`
+      : `${fmt(u[key])} / ${fmt(QMAX[key])}`;
+    const tr = document.createElement('tr');
+    tr.dataset.qreq = r.id;
+    tr.innerHTML = `<td class="name">${r.project} <span class="chip w">승인 대기</span></td><td class="dim">개발팀</td><td class="dim">${r.requester}</td><td class="num">4</td><td class="num">7</td>
+      <td class="num">${cell('cpu')}</td><td class="num">${cell('disk')}</td><td class="dim mono">OS platform · CS platform</td>
+      <td><span class="st warn">쿼터 상향 요청</span><div class="faint" style="font-size:12px">${r.item} +${r.amount}${r.unit} · ${r.period}</div></td>
+      <td class="act"><button class="btn btn-sm btn-pri" onclick="dlg('reviewQuota',{id:'${r.id}'})">검토</button></td>`;
+    tb.insertBefore(tr, anchor);
+  });
+  const n = 1 + pend.length;
+  const v = document.getElementById('admPendV'); if(v) v.textContent = n;
+  const d = document.getElementById('admPendD'); if(d) d.textContent = pend.length ? `프로젝트 생성 1 · 쿼터 상향 ${pend.length}` : '프로젝트 생성 승인 1';
+  const f = document.getElementById('admPendFilter'); if(f) f.textContent = '승인 대기 ' + n;
+}
+function approveQuota(id){
+  const r = QUOTA_REQUESTS.find(x => x.id === id); if(!r) return;
+  r.status = 'approved'; QMAX[QK[r.item] || 'cpu'] += r.amount;
+  dlgClose(); refreshAll(); toast(`${r.project} ${r.item} 상한을 +${r.amount}${r.unit} 올렸습니다`);
+}
+function rejectQuota(id){
+  const r = QUOTA_REQUESTS.find(x => x.id === id); if(!r) return;
+  r.status = 'rejected'; dlgClose(); refreshAll(); toast('쿼터 상향 요청을 반려했습니다');
+}
+
+/* ---------- 기존 환경 위에 설치하는 템플릿 (Argo CD · 인그레스 게이트웨이) ---------- */
+function wzClusters(){ return ENVS.filter(e => e.nodes && e.state === 'running'); }
+function renderWzK(t){
+  const cl = wzClusters();
+  const ctl = ([k, type, def]) => {
+    if(type === 'bool') return `<div class="opts" data-k="${k}"><button class="opt" aria-pressed="${def === 'true'}" onclick="one(this)">사용</button><button class="opt" aria-pressed="${def !== 'true'}" onclick="one(this)">사용 안 함</button></div>`;
+    if(/^enum /.test(type)) return `<div class="opts" data-k="${k}">${type.slice(5).split('|').map(v => `<button class="opt" aria-pressed="${v === def}" onclick="one(this)">${v}</button>`).join('')}</div>`;
+    return `<input type="text" data-k="${k}" value="${def === '—' ? '' : esc(def)}" placeholder="${k === 'repoURL' ? 'https://git.acme.internal/platform/deploy' : ''}">`;
+  };
+  $('#wz2k').innerHTML = `
+    <div class="banner i" style="margin-bottom:16px"><svg class="ic"><use href="#i-layers"/></svg>
+      <div><b>새 VM을 만들지 않습니다.</b> 기존 <b>${t.needsEnv}</b> 위에 ${esc(t.n)}을(를) 설치하고, KloudHub → 대상 클러스터 연결(EnvLink)을 함께 만듭니다.</div></div>
+    ${cl.length
+      ? `<div class="frow"><div class="lbl">대상 클러스터</div><div class="opts" id="wzClusterOpts">${cl.map((c, i) =>
+          `<button class="opt" data-cluster="${c.id}" aria-pressed="${i === 0}" onclick="one(this);renderWzKDelta()">${c.id}<span class="o2">${zlabel(c.zone)} · 노드 ${c.nodes.length}대</span></button>`).join('')}</div></div>`
+      : `<div class="banner" style="margin-bottom:16px"><svg class="ic"><use href="#i-warn"/></svg><div><b>실행 중인 쿠버네티스 환경이 없습니다.</b> 쿠버네티스 템플릿으로 클러스터를 먼저 만드세요.</div></div>`}
+    ${t.inputs.filter(i => i[0] !== 'targetCluster').map(i => `<div class="frow"><div class="lbl mono">${i[0]}</div>${ctl(i)}</div>`).join('')}
+    <div class="lbl">만들어지는 리소스</div>
+    <div class="card"><div class="tw"><table><tbody>${t.plan.map(r => `<tr><td class="name">${r[0]}</td><td class="mono dim">${r[1]}</td><td class="dim">${r[2]}</td></tr>`).join('')}</tbody></table></div></div>`;
+  renderWzKDelta();
+}
+function renderWzKDelta(){
+  const t = wzAddon; if(!t) return;
+  const b = document.querySelector('#wz2k [data-cluster][aria-pressed="true"]');
+  const u = quotaNow(), ip = t.plan.some(p => p[0] === 'FloatingIP'), over = ip && u.ip + 1 > QMAX.ip;
+  $('#delta').innerHTML = b
+    ? `설치 후 vCPU·메모리·디스크 <b>변화 없음</b> · 대상 <b>${b.dataset.cluster}</b>${ip ? ` · 공인 IP <b ${over ? 'style="color:var(--warn)"' : ''}>${u.ip} → ${u.ip + 1}</b> / ${QMAX.ip}` : ''}`
+    : '대상 클러스터가 없습니다';
+  $('#wzNext').disabled = !b || over;
+}
+function installAddon(t){
+  const cb = document.querySelector('#wz2k [data-cluster][aria-pressed="true"]'); if(!cb) return;
+  const cluster = ENVS.find(x => x.id === cb.dataset.cluster); if(!cluster) return;
+  let n = 1; while(ENVS.some(x => x.id === t.c + '-' + n)) n++;
+  const id = t.c + '-' + n;
+  const cfg = {};
+  document.querySelectorAll('#wz2k [data-k]').forEach(el => { cfg[el.dataset.k] = el.tagName === 'INPUT' ? el.value.trim() : ((el.querySelector('[aria-pressed="true"]') || {}).textContent || ''); });
+  closeWizard();
+  envFilter = 'all';
+  document.querySelectorAll('[data-f]').forEach(b => b.setAttribute('aria-pressed', b.dataset.f === 'all' ? 'true' : 'false'));
+  go('environments');
+  const e = {id, tpl:t.n, tv:t.v, state:'creating', cpu:0, mem:0, disk:0, fip:0, owner:'sh', addon:true, target:cluster.id, cfg,
+    access:`${t.c}.${cluster.id}.acme.internal`, be:cluster.be, zone:cluster.zone, exp:'—', net:cluster.net, flavor:'클러스터 위에 설치', iid:'—',
+    links:[{to:cluster.id, port:'6443', dir:'KloudHub → 클러스터'}],
+    progress:{step:1, total:3, label:'Helm Release 설치', pct:20},
+    log:`[09-24 10:00:00] helm install ${t.c} → ${cluster.id}\n[09-24 10:00:02] EnvLink ${id} → ${cluster.id}:6443 생성`};
+  ENVS.unshift(e); refreshAll();
+  const steps = [[2, 'LoadBalancer 준비', 60], [3, '헬스 체크', 90]];
+  let i = 0;
+  const tick = () => {
+    if(i >= steps.length){
+      e.state = 'running'; delete e.progress; refreshAll();
+      toastAction(`${e.id} 설치 완료 — ${cluster.id} 위에서 동작합니다`, '열어보기', () => openEnv(e.id), 6000);
+      announce(`${e.id} 설치 완료`); return;
+    }
+    const [st, label, pct] = steps[i++];
+    e.progress = {step:st, total:3, label, pct}; refreshAll(); setTimeout(tick, 1200);
+  };
+  setTimeout(tick, 1200);
+  announce(`${e.id} 설치를 시작했습니다`);
+}
+function addonUrl(e){
+  const u = 'https://' + e.access;
+  return `<div class="fld"><div class="lbl">접속 주소</div><div class="pre"><span class="t">${u}</span>
+    <button class="btn btn-sm btn-quiet" onclick="copy(event,'${u}')"><svg class="ic ic-sm"><use href="#i-copy"/></svg></button></div>
+    <p class="hint">${esc(e.tpl)}가 <b>${e.target}</b> 클러스터 위에 설치되었습니다. 새 VM은 만들어지지 않았습니다.</p></div>`;
+}
+function addonInfo(e){
+  const c = ENVS.find(x => x.id === e.target);
+  return `<div class="fld"><div class="lbl">설치 정보</div><div class="kv">
+    <span class="k">대상 클러스터</span><span class="v">${e.target}${c ? '' : ' (삭제됨)'}</span>
+    <span class="k">존</span><span class="v">${zlabel(e.zone)}</span>
+    ${Object.entries(e.cfg || {}).map(([k, v]) => `<span class="k">${esc(k)}</span><span class="v">${esc(v || '—')}</span>`).join('')}</div></div>`;
+}
 
 /* ---------- palette ---------- */
 const PAGES = [
@@ -4145,16 +4462,40 @@ function fOk(label){ return `<div class="grow"></div><button class="btn btn-pri"
 
 const DLGS = {
   /* --- 환경 운영 --- */
-  terminal: c => ({t:`터미널 — ${c.id}`, w:680,
-    b:`<div class="pre block" style="min-height:250px;background:#0D1216;color:#C9D6DF;border-color:#242F38">dev@${c.id}:~$ uname -a
-Linux ${c.id} 6.8.0-45-generic #45-Ubuntu SMP x86_64 GNU/Linux
-dev@${c.id}:~$ go version
+  terminal: c => {
+    const e = ENVS.find(x => x.id === c.id) || {};
+    if(e.nodes && !c.node){
+      return ({t:`터미널 — ${c.id}`, w:660,
+        b:`<p class="hint" style="margin:0 0 12px">노드가 ${e.nodes.length}대인 환경입니다. 접속할 노드를 고르세요.</p>
+          ${fTbl(['노드','역할','상태',''], e.nodes.map(n => [`<span class="name">${n.n}</span>`, `<span class="dim">${n.r}</span>`, stTag({state:n.s}),
+            `<button class="btn btn-sm" onclick="dlg('terminal',{id:'${c.id}',node:'${n.n}'})">접속</button>`]))}`,
+        f:fOk('닫기')});
+    }
+    const nd = c.node ? (e.nodes || []).find(n => n.n === c.node) : null;
+    const host = c.node || c.id;
+    if(nd && nd.s !== 'running'){
+      const creating = nd.s === 'creating';
+      return ({t:`터미널 — ${host}`, w:680,
+        b:`${fBan(`<b>${host}</b>에 접속할 수 없습니다. 노드 상태가 <b>${STATES[nd.s].l}</b>입니다. ${creating ? 'kubelet join이 끝나 상태가 <b>실행 중</b>이 되면 접속할 수 있습니다.' : '노드를 복구한 뒤 다시 시도하세요.'}`, 'e')}
+          <div class="pre block" style="min-height:130px;background:#0D1216;color:#C9D6DF;border-color:#242F38">console:~$ ssh dev@${host}
+ssh: connect to host ${host} port 22: ${creating ? 'No route to host' : 'Connection refused'}
+<span style="color:#E0796C">접속 실패 (exit 255)</span>
+console:~$ <span style="background:#C9D6DF;color:#0D1216">&nbsp;</span></div>
+          <p class="hint">실패한 접속 시도도 감사 로그에 기록됩니다.</p>`,
+        f:`<button class="btn btn-sm btn-quiet" onclick="dlgClose();go('activity')">진행 보기</button><div class="grow"></div>
+          <button class="btn" onclick="dlgClose()">닫기</button><button class="btn btn-pri" onclick="dlg('terminal',{id:'${c.id}',node:'${c.node}'})">다시 시도</button>`});
+    }
+    return ({t:`터미널 — ${host}`, w:680,
+      b:`<div class="pre block" style="min-height:250px;background:#0D1216;color:#C9D6DF;border-color:#242F38">dev@${host}:~$ uname -a
+Linux ${host} 6.8.0-45-generic #45-Ubuntu SMP x86_64 GNU/Linux
+dev@${host}:~$ go version
 go version go1.23.4 linux/amd64
-dev@${c.id}:~$ docker ps
+dev@${host}:~$ docker ps
 CONTAINER ID   IMAGE     STATUS
-dev@${c.id}:~$ <span style="background:#C9D6DF;color:#0D1216">&nbsp;</span></div>
-    <p class="hint">브라우저 터미널은 SSH 키 없이 접속합니다. 세션은 감사 로그에 기록됩니다.</p>`,
-    f:`<button class="btn btn-sm btn-quiet" onclick="copy(event,'ssh dev@${c.id}')">SSH 명령 복사</button>${fOk('닫기')}`}),
+dev@${host}:~$ <span style="background:#C9D6DF;color:#0D1216">&nbsp;</span></div>
+      <p class="hint">브라우저 터미널은 SSH 키 없이 접속합니다. 세션은 감사 로그에 기록됩니다.</p>`,
+      f:`<button class="btn btn-sm btn-quiet" onclick="copy(event,'ssh dev@${host}')">SSH 명령 복사</button>${fOk('닫기')}`});
+  },
 
   startEnv: c => ({t:`${c.id} 시작`, w:480,
     b:`${fKv([['현재 상태','정지됨'],['쿼터','변화 없음 — 정지 중에도 vCPU·메모리·디스크를 계속 점유하고 있었습니다'],['예상 시간','40초 내외']])}`,
@@ -4285,10 +4626,11 @@ dev@${c.id}:~$ <span style="background:#C9D6DF;color:#0D1216">&nbsp;</span></div
       ${fFld('도메인', fKv([['자동 발급','dev-sandbox.app.acme.internal'],['TLS','인그레스 게이트웨이 필요']]),'게이트웨이 환경이 없으면 IP로만 접근합니다.')}`,
     f:fFoot('공개','포트를 공개했습니다')}),
 
-  unlink: c => ({t:'연결 해제', w:460,
-    b:`${fKv([['출발',c.from||'dev-sandbox'],['대상',c.to||'pg-staging'],['포트','5432'],['방향','단방향']])}
+  unlink: c => { const src = ENVS.find(x => x.id === c.from), l = src && (src.links || []).find(x => x.to === c.to) || {};
+    return ({t:'연결 해제', w:460,
+    b:`${fKv([['출발',c.from||'dev-sandbox'],['대상',c.to||'pg-staging'],['포트',l.port||'5432'],['방향',l.dir||'단방향']])}
       <p class="hint">해제하면 내부 주소로 접근할 수 없습니다. 상대 환경에는 영향이 없습니다.</p>`,
-    f:fFoot('해제','연결을 해제했습니다',{danger:true})}),
+    f:fFoot('해제','연결을 해제했습니다',{danger:true,then:`doUnlink('${c.from}','${c.to}');`})}); },
 
   /* --- 노드 --- */
   addNode: () => ({t:'노드 추가', w:520,
@@ -4400,6 +4742,15 @@ runcmd:
         ['<span class="mono">기본 네트워크</span>','<span class="dim">첫 환경 생성 시 자동</span>']]),'프로젝트를 삭제하면 백엔드 객체도 함께 회수됩니다.')}
       ${fBan('내 프로젝트 <b class="mono">2 / 3</b>개 사용 중 · 조직 vCPU <b class="mono">331 → 347</b> / 400. 기본 쿼터 범위라 승인 없이 바로 만들어집니다.','i')}`,
     f:fFoot('만들기','프로젝트를 만들고 있습니다',{then:"go('projects');"})}),
+
+  reviewQuota: c => { const r = QUOTA_REQUESTS.find(x => x.id === c.id) || {}; const k = QK[r.item] || 'cpu'; const u = quotaNow();
+    return ({t:`쿼터 상향 검토 — ${r.project}`, w:560,
+    b:`${fKv([['요청자',r.requester],['프로젝트',r.project],['항목',r.item],['기간',r.period],['사유',esc(r.reason)||'—']])}
+      ${fFld('변경', fTbl(['항목','현재 상한','현재 사용','승인 후 상한'],[
+        [r.item, `<span class="mono">${fmt(QMAX[k])}${r.unit}</span>`, `<span class="mono">${fmt(u[k])}${r.unit}</span>`, `<b class="mono">${fmt(QMAX[k] + r.amount)}${r.unit}</b> <span class="faint mono">(+${r.amount})</span>`]]))}
+      ${r.period !== '영구' ? '<p class="hint">임시 요청입니다. 기간이 끝나면 상한이 자동으로 원래대로 돌아갑니다.</p>' : ''}`,
+    f:`<button class="btn btn-warn" onclick="rejectQuota('${r.id}')">반려</button><div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-pri" onclick="approveQuota('${r.id}')">승인</button>`}); },
 
   reviewProject: c => ({t:`프로젝트 승인 — ${c.name||'team-search'}`, w:600,
     b:`${fKv([['요청자','dkim'],['용도','실험'],['요청일','09-18'],['멤버','2명']])}
@@ -4589,7 +4940,8 @@ runcmd:
         ['취약점 스캔','<span class="st warn">중간 2건</span>'],
         ['다른 존 복제','<span class="st err">미복제 — kr-b 에서 사용 불가</span>']]))}
       ${fFld('승인 시 공유 범위', fOpt([['공용 전체'],['요청 프로젝트만']],0))}`,
-    f:`<button class="btn btn-warn" onclick="dlgClose();toast('반려했습니다')">반려</button>${fFoot('승인','공용 이미지로 등록했습니다')}`}),
+    f:`<button class="btn btn-warn" onclick="rejectPg()">반려</button><div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-pri" onclick="approvePg()">승인</button>`}),
 
   saveTemplate: c => ({t:'템플릿으로 저장', w:600,
     b:`${fFld('원본 환경', `<div class="pre"><span class="t">${c.id||'dev-sandbox'} · 개발 VM v1.4</span></div>`)}
@@ -4624,7 +4976,7 @@ spec:
 
   netEdit: c => ({t:`네트워크 — ${c.name||'dev-sandbox-net'}`, w:560,
     b:`${fKv([['대역','10.64.3.0/24 (자동 할당)'],['모델','전용 격리'],['환경','dev-sandbox'],['라우터','프로젝트 공용']])}
-      ${fFld('공인 IP', fOpt([['할당됨','203.0.113.42'],['해제','쿼터 반환']],0))}
+      ${fFld('공인 IP', fOpt([['할당됨','203.0.113.42'],['해제','환경이 관리 — 변경 불가',true]],0))}
       ${fFld('다른 환경에서 접근', fOpt([['차단','기본'],['연결로 허용','환경 연결 추가']],0),'연결은 포트를 명시해야 합니다. 관리자 정책: 같은 프로젝트·같은 존.')}
       ${fBan('대역(CIDR)은 풀에서 자동 할당되며 변경할 수 없습니다. 환경을 삭제하면 함께 회수됩니다.')}`,
     f:fFoot('저장','네트워크 설정을 저장했습니다')}),
@@ -4691,22 +5043,39 @@ spec:
     f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
        <button class="btn btn-pri" ${impact.over?'disabled':''} onclick="doNewVolume()">만들기</button>`}); },
 
-  attachVol: c => ({t:`볼륨 연결 — ${c.n}`, w:520,
-    b:`${fKv([['볼륨',c.n||'vol-scratch'],['크기','200 GB'],['존','kr-a']])}
-      ${fFld('연결할 인스턴스', fOpt([['dev-sandbox-0','실행 중'],['ci-runner-0','실행 중'],['data-etl-0','다른 존',true]],0))}
-      ${fFld('장치 경로', fIn('/dev/vdb'),'게스트 OS에서 마운트는 직접 해야 합니다.')}
+  attachVol: c => { const byInst = !!instOf(c.n).n;
+    const vols = volumes(), insts = instances();
+    let list, pick = false;
+    if(byInst){
+      const me = instOf(c.n);
+      list = vols.filter(v => v.kind === '데이터' && !v.att).map(v => [v.n, `${v.gb} GB · ${v.be}`, v.be !== me.be ? '다른 존' : '']);
+    } else {
+      const vv = volOf(c.n);
+      list = insts.filter(i => !i.orphan).map(i => [i.n, i.state === 'running' ? '실행 중' : '정지됨', i.be !== vv.be ? '다른 존' : '']);
+    }
+    const btns = list.map(([n, sub, bad]) => { const on = !bad && !pick; if(on) pick = true;
+      return `<button class="opt" ${bad ? 'disabled' : ''} aria-pressed="${on}" data-pick="${n}" onclick="one(this)">${n}<span class="o2">${bad || sub}</span></button>`; }).join('');
+    const v0 = byInst ? {} : volOf(c.n);
+    return ({t:`볼륨 연결 — ${c.n}`, w:520,
+    b:`${byInst ? fKv([['인스턴스',c.n],['존',instOf(c.n).be]]) : fKv([['볼륨',c.n],['크기',(v0.gb||'—')+' GB'],['존',v0.be||'—']])}
+      ${fFld(byInst ? '연결할 볼륨' : '연결할 인스턴스', `<div class="opts" id="atOpts">${btns || '<span class="faint">대상이 없습니다</span>'}</div>`, pick ? '' : '같은 존에 연결할 수 있는 대상이 없습니다.')}
+      ${fFld('장치 경로', `<input type="text" id="atDev" value="/dev/vdb">`,'게스트 OS에서 마운트는 직접 해야 합니다.')}
       <p class="hint">연결 후 <span class="mono">mkfs</span> 와 <span class="mono">mount</span> 명령은 인스턴스 안에서 실행하세요.</p>`,
-    f:fFoot('연결','볼륨을 연결했습니다')}),
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-pri" ${pick ? '' : 'disabled'} onclick="doAttach('${c.n}',${byInst})">연결</button>`}); },
 
-  detachVol: c => ({t:`볼륨 분리 — ${c.n}`, w:500,
+  detachVol: c => { const v = volOf(c.n);
+    if(v.kind === '부팅') return blockDlg(`분리할 수 없음 — ${c.n}`, `<b>${c.n}</b>은(는) 환경 <b>${v.env}</b>의 부팅 볼륨입니다. 분리하면 인스턴스가 부팅되지 않고 환경 정의와 어긋납니다.`, v.env);
+    return ({t:`볼륨 분리 — ${c.n}`, w:500,
     b:`${fBan('분리 전에 게스트 OS에서 <span class="mono">umount</span> 하세요. 마운트된 상태로 분리하면 데이터가 손상될 수 있습니다.')}
-      ${fKv([['연결 대상','dev-sandbox-0'],['장치','/dev/vdb'],['크기','120 GB']])}
+      ${fKv([['연결 대상',v.att||'—'],['장치',v.dev||'—'],['크기',(v.gb||'—')+' GB']])}
       ${fFld('부팅 볼륨 여부', fKv([['종류','데이터 볼륨 — 분리 가능']]))}`,
-    f:fFoot('분리','볼륨을 분리했습니다',{danger:true})}),
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-danger" onclick="dlgClose();doDetachVol('${c.n}')">분리</button>`}); },
 
   expandVol: c => { const t = resolveVolumeTarget(c.n); const cur = c.gb || t.gb;
     const impact = quotaImpact({disk:50}); return ({t:`볼륨 확장 — ${c.n}`, w:520,
-    b:`${fKv([['현재 크기',cur+' GB'],['연결 대상', t.type==='env'?t.ref.id+'-0':(t.ref&&t.ref.att)||'—'],['종류', t.type==='env'?'부팅 볼륨':'데이터 볼륨']])}
+    b:`${fKv([['현재 크기',cur+' GB'],['연결 대상', t.type==='env'?t.ref.id+'-0':t.type==='node'?c.n.replace(/-root$/,''):(t.ref&&t.ref.att)||'—'],['종류', t.type==='extra'?'데이터 볼륨':'부팅 볼륨']])}
       ${fFld('새 크기 (GB)', `<input type="text" id="evSize" value="${cur+50}">`, '줄일 수는 없습니다.')}
       ${fBan('확장 후 게스트 OS에서 파티션과 파일시스템을 늘려야 합니다. <span class="mono">growpart</span> · <span class="mono">resize2fs</span>')}
       ${impact.html}`,
@@ -4721,7 +5090,8 @@ spec:
     f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
        <button class="btn btn-pri" ${impact.over?'disabled':''} onclick="doAllocIP()">할당</button>`}); },
 
-  releaseIP: c => { const impact = quotaImpact({ip:-1}); return ({t:'공인 IP 해제', w:460,
+  releaseIP: c => { if(ownedIP(c.ip)) return blockDlg('해제할 수 없음 — ' + c.ip, `<b>${c.ip}</b>는 환경 <b>${(ENVS.find(e => e.pubip === c.ip) || {}).id}</b>에 할당된 공인 IP입니다. 환경이 관리하므로 개별로 해제할 수 없습니다.`, (ENVS.find(e => e.pubip === c.ip) || {}).id);
+    const impact = quotaImpact({ip:-1}); return ({t:'공인 IP 해제', w:460,
     b:`${fKv([['주소',c.ip||'—'],['연결 대상', (ENVS.find(e=>e.pubip===c.ip)||{}).id ? (ENVS.find(e=>e.pubip===c.ip)||{}).id+'-0' : '—'],['환경', (ENVS.find(e=>e.pubip===c.ip)||{}).id || '—']])}
       ${fBan('해제하면 외부에서 접근할 수 없게 되고, 같은 주소를 다시 받는다는 보장이 없습니다.')}
       ${impact.html}`,
@@ -4770,15 +5140,20 @@ ${c.n} login: <span style="background:#C9D6DF;color:#0D1216">&nbsp;</span></div>
       <p class="hint">VNC/Serial 콘솔은 SSH가 막혔을 때 쓰는 최후 수단입니다. 세션은 감사 로그에 기록됩니다.</p>`,
     f:fOk('닫기')}),
 
-  delInstance: c => ({t:`인스턴스 삭제 — ${c.n}`, w:520,
-    b:`${fBan('되돌릴 수 없습니다. 부팅 볼륨은 함께 삭제되고, 데이터 볼륨은 분리만 됩니다.')}
-      ${fFld('함께 회수', fTbl(['리소스','종류','처리'],[
-        [`<span class="mono">${c.n}-root</span>`,'부팅 볼륨','<span class="dim">삭제</span>'],
-        ['<span class="mono">203.0.113.42</span>','공인 IP','<span class="dim">해제</span>'],
-        ['<span class="mono">team-k8s-data</span>','데이터 볼륨','<span class="st warn">분리만</span>'],
-        ['<span class="mono">platform-common</span>','보안그룹','<span class="st warn">공유 — 유지</span>']]))}
-      <p class="hint">환경에 인스턴스가 하나뿐이면 환경도 함께 삭제됩니다.</p>`,
-    f:fFoot('삭제','인스턴스를 삭제합니다',{danger:true})}),
+  delInstance: c => { const i = instOf(c.n);
+    if(i.env) return blockDlg(`삭제할 수 없음 — ${c.n}`, `<b>${c.n}</b>은(는) 환경 <b>${i.env}</b>이(가) 관리하는 인스턴스입니다. 개별로 삭제하면 환경 정의와 실제 리소스가 어긋납니다(드리프트).`, i.env);
+    return ({t:`인스턴스 ${i.orphan ? '회수' : '삭제'} — ${c.n}`, w:520,
+    b:`${fBan(i.orphan ? '생성 실패로 남은 고아 리소스입니다. 회수하면 쿼터가 반환됩니다.' : '되돌릴 수 없습니다.')}
+      <p class="hint">연결된 데이터 볼륨은 분리만 되고 삭제되지 않습니다.</p>`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-danger" onclick="dlgClose();doDelInstance('${c.n}')">${i.orphan ? '회수' : '삭제'}</button>`}); },
+  delVolume: c => { const v = volOf(c.n); const impact = quotaImpact({disk:-(v.gb || 0)});
+    if(v.kind === '부팅') return blockDlg(`삭제할 수 없음 — ${c.n}`, `<b>${c.n}</b>은(는) 환경 <b>${v.env}</b>의 부팅 볼륨입니다. 환경이 관리하므로 개별로 삭제할 수 없습니다.`, v.env);
+    if(v.att) return blockDlg(`삭제할 수 없음 — ${c.n}`, `<b>${c.n}</b>은(는) <b>${v.att}</b>에 연결되어 있습니다. 먼저 분리한 뒤 삭제하세요.`, null);
+    return ({t:`볼륨 삭제 — ${c.n}`, w:480,
+    b:`${fBan('되돌릴 수 없습니다. 볼륨의 데이터는 복구할 수 없습니다.')}${fKv([['볼륨',c.n],['크기',(v.gb || '—') + ' GB']])}${impact.html}`,
+    f:`<div class="grow"></div><button class="btn" onclick="dlgClose()">취소</button>
+       <button class="btn btn-danger" onclick="dlgClose();doDelVolume('${c.n}')">삭제</button>`}); },
 
   newTemplate: () => ({t:'템플릿 만들기', w:600,
     b:`${fFld('만드는 방법', `<div style="display:grid;gap:8px">
@@ -4889,6 +5264,15 @@ spec:
        <button class="btn btn-danger" id="volBulkOk" disabled onclick="dlgClose();doBulkVol()">삭제</button>`})
 };
 
+const _editSG = DLGS.editSG;
+DLGS.editSG = c => {
+  const o = _editSG(c);
+  if(!/^sg-/.test(c.n || '')) return o;
+  o.b = fBan('<b>환경이 관리하는 보안그룹</b>입니다. 규칙은 환경 상세 › 접속의 방화벽에서 바꿉니다. 여기서 직접 고치면 환경 정의와 어긋납니다(드리프트).', 'i')
+    + o.b.replace(/onclick="toast\('규칙을 [^']*'\)"/g, 'disabled').replace(/<input /g, '<input disabled ').replace(/<select /g, '<select disabled ');
+  o.f = fOk('닫기'); o.t = o.t.replace('보안그룹', '보안그룹 (읽기 전용)');
+  return o;
+};
 function dlg(k, ctx){
   closeMenus();
   const d = DLGS[k]; if(!d) return;
@@ -5041,7 +5425,7 @@ function verifyQuota(){
     ['disk.env', q.parts.envDisk, 660], ['disk.vol', q.parts.volDisk, 370], ['disk.snap', q.parts.snapDisk, 260],
     ['QMAX.disk', QMAX.disk, 1536],
     ['reclaim.count', r.length, 4], ['reclaim.cpu', sum('cpu'), 14], ['reclaim.mem', sum('mem'), 44], ['reclaim.disk', sum('disk'), 500],
-    ['nav badge', document.querySelector('[data-nav="quota"] .cnt').textContent, '88%'],
+    ['nav badge', document.getElementById('sfCurPct').textContent, '88%'],
     ['member sum', ['sh','dkim','jlee'].reduce((a,o) => a + ENVS.filter(e => e.owner===o).reduce((b,e) => b + e.cpu, 0), 0) + SYSTEM.cpu, 35]
   ];
   const fail = checks.filter(([,a,b]) => a !== b);
